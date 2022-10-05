@@ -1,9 +1,10 @@
 
-![Screenshot](./imgs/GReaT_logo.png)
+[//]: # (![Screenshot]&#40;./imgs/GReaT_logo.png&#41;)
+<p align="center">
+<img src="./imgs/GReaT_logo.png" width="326"/>
+</p>
 
 
-
-#
 
 ```python
 from be_great import great
