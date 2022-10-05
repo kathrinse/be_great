@@ -29,21 +29,17 @@ class GREAT:
     """
 
     def __init__(self, llm: str, experiment_name="trainer_great", epochs=100, batch_size=8, **train_params):
+
         self.llm = llm
-        
         self.tokenizer = AutoTokenizer.from_pretrained(self.llm)
         self.tokenizer.pad_token = self.tokenizer.eos_token
-
         self.model = AutoModelForCausalLM.from_pretrained(self.llm)
-        
         self.experiment_name = experiment_name
-        
         self.epochs = epochs
         self.batch_size = batch_size
         self.train_params = train_params
-        
         self.target_col = None
-        
+
     def fit(self, df: pd.DataFrame, target_col=None, verbose=False, resume_from_checkpoint=False):
         """ Fine-tune a pretrained large language model to tabular data.
             :param df: Pandas DataFrame containing tabular data
