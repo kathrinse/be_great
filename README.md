@@ -5,11 +5,13 @@
 </p>
 
 ```python
-from be_great import great
+from be_great import GReaT
 
-model = great()
-model.fit()
-model.sample()
+data = ...
+
+model = GReaT()
+model.fit(data)
+model.sample(100)
 ```
 
 
