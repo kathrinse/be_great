@@ -4,8 +4,6 @@
 <img src="./imgs/GReaT_logo.png" width="326"/>
 </p>
 
-
-
 ```python
 from be_great import great
 
