@@ -19,6 +19,9 @@ def seed_worker(_):
 
 
 class GReaTTrainer(Trainer):
+    """
+    Overwrites the get_train_dataloader to not remove the "unused" columns - they are needed later!
+    """
     def get_train_dataloader(self) -> DataLoader:
         if self.train_dataset is None:
             raise ValueError("Trainer: training requires a train_dataset.")

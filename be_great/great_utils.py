@@ -38,6 +38,11 @@ def _get_column_distribution(df: pd.DataFrame, col: str) -> tp.Union[list, dict]
 
 
 def _convert_tokens_to_text(tokens: list[list[int]], tokenizer: AutoTokenizer):
+    """ Decodes the tokens back to strings
+    :param tokens: List of tokens to decode
+    :param tokenizer: Tokenizer is used for decoding
+    :return: List of decoded strings
+    """
     # Convert tokens to text
     text_data = [tokenizer.decode(t) for t in tokens]
 
@@ -50,6 +55,11 @@ def _convert_tokens_to_text(tokens: list[list[int]], tokenizer: AutoTokenizer):
 
 
 def _convert_text_to_tabular_data(text: list[str], df_gen: pd.DataFrame):
+    """ Converts the sentences back to a table
+    :param text: List of the tabular data in text form
+    :param df_gen: Pandas DataFrame where the tabular data is appended
+    :return: Pandas DataFrame with the tabular data from the text appended
+    """
     columns = df_gen.columns.to_list()
 
     # Convert text to tabular data
