@@ -8,11 +8,11 @@
 <b>Generation of Realistic Tabular Data</b>
 </p>
 
----
 ### **tl&dr**
+
 Our GReaT framework utilizes the capabilities of pretrained large language Transformer models to synthesize realistic tabular data. 
 It follows the common data science API, and require only four lines of code to generate new samples. 
----
+
 
 ## GReaT Installation
 
@@ -46,4 +46,4 @@ If you use GReaT, please link or cite our work:
 
 ## GReaT Acknowledgements
 
-We sincerely thank another [HuggingFace](https://huggingface.co/) :hugs: framework. 
+We sincerely thank [HuggingFace](https://huggingface.co/) :hugs: framework. 
