@@ -16,6 +16,7 @@ from transformers import (AutoTokenizer,
                           TrainingArguments)
 
 from be_great.great_dataset import GReaTDataset, GReaTDataCollator
+from be_great.great_start import GReaTStart, CategoricalStart, ContinuousStart, RandomStart
 from be_great.great_trainer import GReaTTrainer
 from be_great.great_utils import _array_to_dataframe, _get_column_distribution, _convert_tokens_to_text, \
     _convert_text_to_tabular_data
@@ -85,7 +86,7 @@ class GReaT:
         great_trainer.train(resume_from_checkpoint=resume_from_checkpoint)
         return great_trainer
 
-    def sample(self, n_samples: int, start_col="", start_col_dist={},
+    def sample(self, n_samples: int, start_col="", start_col_dist=None,
                temperature=0.7, k=100, max_length=100, device="cuda") -> pd.DataFrame:
         """ Generate new synthetic samples
             :param n_samples: Number of samples to generate
@@ -100,10 +101,10 @@ class GReaT:
             See this blog article (https://huggingface.co/blog/how-to-generate) to read more about the generation
             process
             :param k: Sampling Batch Size. Set as high as possible. Speeds up the generation process significantly
-            :param max_length: Maximal number of tokens to generate - has to be long enough to not cut any information
+            :param max_length: Maximal number of tokens to generate - has to be long enough to not cut any information!
             :param device: Set to "cpu" if the GPU should not be used. You can also specify the concrete GPU
         """
-        start_col, start_col_dist, col_type = self._get_conditional_feature(start_col, start_col_dist)
+        great_start = self._get_start_sampler(start_col, start_col_dist)
 
         # Move model to device
         self.model.to(device)
@@ -115,24 +116,11 @@ class GReaT:
         with tqdm(total=n_samples) as pbar:
             already_generated = 0
             while n_samples > df_gen.shape[0]:
-
-                # Create start prompt
-                if col_type == "discrete":
-                    population = list(start_col_dist.keys())
-                    weights = list(start_col_dist.values())
-
-                    start_words = random.choices(population, weights, k=k)
-                    start = [start_col + " is " + str(s) + "," for s in start_words]
-                else:
-                    start_words = random.choices(start_col_dist, k=k)
-                    start_words += np.random.normal(size=k) * .01  # add noise to start words
-                    start = [start_col + " is " + format(s, ".5f") + "," for s in start_words]
-
-                # ToDo: Check that all input_ids have the same length!
-                start_token = torch.tensor(self.tokenizer(start)["input_ids"]).to(device)
+                start_tokens = great_start.get_start_tokens(k)
+                start_tokens = torch.tensor(start_tokens).to(device)
 
                 # Generate tokens
-                tokens = self.model.generate(input_ids=start_token, max_length=max_length,
+                tokens = self.model.generate(input_ids=start_tokens, max_length=max_length,
                                              do_sample=True, temperature=temperature, pad_token_id=50256)
 
                 # Convert tokens back to tabular data
@@ -246,28 +234,33 @@ class GReaT:
         self.num_cols = df.select_dtypes(include=np.number).columns.to_list()
 
     def _update_conditional_information(self, df, conditional_col=None):
+        assert conditional_col is None or isinstance(conditional_col, str), \
+            f"The column name has to be a string and not {type(conditional_col)}"
+        assert conditional_col is None or conditional_col in df.columns, \
+            f"The column name {conditional_col} is not in the feature names of the given dataset"
+
         # Take the distribution of the conditional column for a starting point in the generation process
         self.conditional_col = conditional_col if conditional_col else df.columns[-1]
         self.conditional_col_dist = _get_column_distribution(df, self.conditional_col)
 
-    def _get_conditional_feature(self, start_col, start_col_dist):
-        if start_col and not start_col_dist:
+    def _get_start_sampler(self, start_col: tp.Optional[str],
+                           start_col_dist: tp.Optional[tp.Union[tp.Dict, tp.List]]) -> GReaTStart:
+        if start_col and start_col_dist is None:
             raise ValueError(f"Start column {start_col} was given, but no corresponding distribution.")
-        if start_col_dist and not start_col:
+        if start_col_dist is not None and not start_col:
             raise ValueError(f"Start column distribution {start_col} was given, the column name is missing.")
+
+        assert start_col is None or isinstance(start_col, str), \
+            f"The column name has to be a string and not {type(start_col)}"
+        assert start_col_dist is None or isinstance(start_col_dist, dict) or isinstance(start_col_dist, list), \
+            f"The distribution of the start column on has to be a list or a dict and not {type(start_col_dist)}"
 
         start_col = start_col if start_col else self.conditional_col
         start_col_dist = start_col_dist if start_col_dist else self.conditional_col_dist
 
-        # ToDo: Instead, just start with different features!
-        assert start_col, f"There is no learned target distribution.\
-                            This may occur, when you did not fine-tune the model via the fitting function. \
-                            Therefore, to sample data, you have to specify a start column and a start column \
-                            distribution."
-
-        col_type = "discrete" if isinstance(start_col_dist, dict) else "continuous"
-
-        return start_col, start_col_dist, col_type
-
-
-
+        if isinstance(start_col_dist, dict):
+            return CategoricalStart(self.tokenizer, start_col, start_col_dist)
+        elif isinstance(start_col_dist, list):
+            return ContinuousStart(self.tokenizer, start_col, start_col_dist)
+        else:
+            return RandomStart(self.tokenizer, self.columns)
