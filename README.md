@@ -5,14 +5,13 @@
 </p>
 
 <p align="center">
-<b>Generation of Realistic Tabular Data</b>
+<strong>Generation of Realistic Tabular data</strong>
 </p>
 
 ### **tl&dr**
 
 Our GReaT framework utilizes the capabilities of pretrained large language Transformer models to synthesize realistic tabular data. 
-It follows the common data science API, and require only four lines of code to generate new samples. 
-
+New samples are generated with just four lines of code, following the scikit-learn API.
 
 ## GReaT Installation
 
@@ -24,7 +23,8 @@ pip install be-great
 
 
 ## GReaT Quickstart
-Here is an example 
+
+In the example below, we show how the GReaT approach is used to generate synthetic tabular data for the California Housing dataset.
 ```python
 from be_great import GReaT
 from sklearn.datasets import fetch_california_housing
