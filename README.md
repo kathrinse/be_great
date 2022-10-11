@@ -6,6 +6,7 @@
 
 <p align="center">
 <strong>Generation of Realistic Tabular data</strong>
+<br> with pretrained Transformer-based language models
 </p>
 
 ### **tl&dr**
