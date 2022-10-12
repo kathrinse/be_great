@@ -9,10 +9,8 @@
 <br> with pretrained Transformer-based language models
 </p>
 
-### **tl&dr**
-
 Our GReaT framework utilizes the capabilities of pretrained large language Transformer models to synthesize realistic tabular data. 
-New samples are generated with just four lines of code, following the scikit-learn API.
+New samples are generated with just a few lines of code, following an easy-to-use API.
 
 ## GReaT Installation
 
