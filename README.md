@@ -30,13 +30,14 @@ In the example below, we show how the GReaT approach is used to generate synthet
 from be_great import GReaT
 from sklearn.datasets import fetch_california_housing
 
-data = fetch_california_housing(as_frame=True)['data']
+data = fetch_california_housing(as_frame=True).frame
 
 model = GReaT(llm='distilgpt2', epochs=50)
 model.fit(data)
 synthetic_data = model.sample(n_samples=100)
 ```
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/borisdayma/huggingtweets/blob/master/huggingtweets-demo.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]
+(https://colab.research.google.com/github/kathrinse/be_great/blob/main/examples/Example_California_Housing.ipynb)
 
 ## GReaT Citation 
 If you use GReaT, please link or cite our work:
