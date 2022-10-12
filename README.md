@@ -36,8 +36,7 @@ model = GReaT(llm='distilgpt2', epochs=50)
 model.fit(data)
 synthetic_data = model.sample(n_samples=100)
 ```
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]
-(https://colab.research.google.com/github/kathrinse/be_great/blob/main/examples/Example_California_Housing.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kathrinse/be_great/blob/main/examples/Example_California_Housing.ipynb)
 
 ## GReaT Citation 
 If you use GReaT, please link or cite our work:
