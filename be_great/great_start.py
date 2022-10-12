@@ -126,7 +126,7 @@ class ContinuousStart(GReaTStart):
 
     def get_start_tokens(self, n_samples):
         start_words = random.choices(self.start_col_dist, k=n_samples)
-        start_words += np.random.normal(size=n_samples) * self.noise  # add noise to start words
+        # start_words += np.random.normal(size=n_samples) * self.noise  # add noise to start words
         start_text = [self.start_col + " is " + format(s, f".{self.decimal_places}f") + "," for s in start_words]
         start_tokens = _pad_tokens(self.tokenizer(start_text)["input_ids"])
         return start_tokens
