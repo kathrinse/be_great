@@ -5,3 +5,6 @@ __pycache__
 */.ipynb_checkpoints
 
 .idea
+
+examples/iris*
+examples/trainer_*

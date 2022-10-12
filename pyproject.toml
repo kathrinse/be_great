@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "be_great"
+version = "0.0.1"
+authors = [
+  { name="Kathrin Sessler", email="kathrin.sessler@tum.de" },
+]
+description = "Generating Realistic Tabular Data using Large Language Models"
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+keywords = ["great", "pytorch", "tabular data", "data generation", "transformer", "language models", "deep learning"]
+dependencies = [
+    "datasets >= 2.5.2",
+    "numpy >= 1.23.1",
+    "pandas >= 1.4.4",
+    "scikit_learn >= 1.1.1",
+    "torch >= 1.10.2",
+    "tqdm >= 4.64.1",
+    "transformers >= 4.22.1"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/kathrinse/be_great"
+
+[tool.setuptools]
+packages = ["be_great"]
