@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from transformers import Trainer
 
 
-def seed_worker(_):
+def _seed_worker(_):
     """
     Helper function to set worker seed during Dataloader initialization.
     """
@@ -19,8 +19,10 @@ def seed_worker(_):
 
 
 class GReaTTrainer(Trainer):
-    """
-    Overwrites the get_train_dataloader to not remove the "unused" columns - they are needed later!
+    """ GReaT Trainer
+
+    Overwrites the get_train_dataloader methode of the HuggingFace Trainer to not remove the "unused" columns -
+    they are needed later!
     """
     def get_train_dataloader(self) -> DataLoader:
         if self.train_dataset is None:
@@ -38,5 +40,5 @@ class GReaTTrainer(Trainer):
             drop_last=self.args.dataloader_drop_last,
             num_workers=self.args.dataloader_num_workers,
             pin_memory=self.args.dataloader_pin_memory,
-            worker_init_fn=seed_worker,
+            worker_init_fn=_seed_worker,
         )

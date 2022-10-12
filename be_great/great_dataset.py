@@ -7,15 +7,25 @@ from transformers import DataCollatorWithPadding
 
 
 class GReaTDataset(Dataset):
-    """
-    The GReaTDataset overwrites the _getitem function to include the permutation.
+    """ GReaT Dataset
+
+    The GReaTDataset overwrites the _getitem function of the HuggingFace Dataset Class to include the permutation step.
+
+    Attributes:
+        tokenizer (AutoTokenizer): Tokenizer from HuggingFace
     """
     def set_tokenizer(self, tokenizer):
+        """ Set the Tokenizer
+
+        Args:
+            tokenizer: Tokenizer from HuggingFace
+        """
         self.tokenizer = tokenizer
 
     def _getitem(self, key: tp.Union[int, slice, str], decoded: bool = True, **kwargs) -> tp.Union[tp.Dict, tp.List]:
-        """
-        Get one instance of the tabular data, permuted, converted to text and tokenized
+        """ Get Item from Tabular Data
+
+        Get one instance of the tabular data, permuted, converted to text and tokenized.
         """
         # If int, what else?
         row = self._data.fast_slice(key, 1)
@@ -33,8 +43,9 @@ class GReaTDataset(Dataset):
 
 @dataclass
 class GReaTDataCollator(DataCollatorWithPadding):
-    """
-    Overwrites the DataCollator to also pad the labels and not only the input ids
+    """ GReaT Data Collator
+
+    Overwrites the DataCollatorWithPadding to also pad the labels and not only the input_ids
     """
     def __call__(self, features: tp.List[tp.Dict[str, tp.Any]]):
         batch = self.tokenizer.pad(

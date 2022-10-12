@@ -2,15 +2,20 @@ import typing as tp
 
 import numpy as np
 import pandas as pd
+import torch
 
 from transformers import AutoTokenizer
 
 
 def _array_to_dataframe(data: tp.Union[pd.DataFrame, np.ndarray], columns=None) -> pd.DataFrame:
     """ Converts a Numpy Array to a Pandas DataFrame
-    :param data: Pandas DataFrame or Numpy NDArray
-    :param columns: If data is a Numpy Array, columns needs to be a list of all column names
-    :return: Pandas DataFrame
+
+    Args:
+        data: Pandas DataFrame or Numpy NDArray
+        columns: If data is a Numpy Array, columns needs to be a list of all column names
+
+    Returns:
+        Pandas DataFrame with the given data
     """
     if isinstance(data, pd.DataFrame):
         return data
@@ -26,9 +31,13 @@ def _array_to_dataframe(data: tp.Union[pd.DataFrame, np.ndarray], columns=None) 
 def _get_column_distribution(df: pd.DataFrame, col: str) -> tp.Union[list, dict]:
     """ Returns the distribution of a given column. If continuous, returns a list of all values.
         If categorical, returns a dictionary in form {"A": 0.6, "B": 0.4}
-    :param df: pandas DataFrame
-    :param col: name of the column
-    :return: distribution of the column
+
+    Args:
+        df: pandas DataFrame
+        col: name of the column
+
+    Returns:
+        Distribution of the column
     """
     if df[col].dtype == "float":
         col_dist = df[col].to_numpy()
@@ -37,11 +46,15 @@ def _get_column_distribution(df: pd.DataFrame, col: str) -> tp.Union[list, dict]
     return col_dist
 
 
-def _convert_tokens_to_text(tokens: list[list[int]], tokenizer: AutoTokenizer):
+def _convert_tokens_to_text(tokens: tp.List[torch.Tensor], tokenizer: AutoTokenizer) -> tp.List[str]:
     """ Decodes the tokens back to strings
-    :param tokens: List of tokens to decode
-    :param tokenizer: Tokenizer is used for decoding
-    :return: List of decoded strings
+
+    Args:
+        tokens: List of tokens to decode
+        tokenizer: Tokenizer used for decoding
+
+    Returns:
+        List of decoded strings
     """
     # Convert tokens to text
     text_data = [tokenizer.decode(t) for t in tokens]
@@ -54,11 +67,15 @@ def _convert_tokens_to_text(tokens: list[list[int]], tokenizer: AutoTokenizer):
     return text_data
 
 
-def _convert_text_to_tabular_data(text: list[str], df_gen: pd.DataFrame):
-    """ Converts the sentences back to a table
-    :param text: List of the tabular data in text form
-    :param df_gen: Pandas DataFrame where the tabular data is appended
-    :return: Pandas DataFrame with the tabular data from the text appended
+def _convert_text_to_tabular_data(text: tp.List[str], df_gen: pd.DataFrame) -> pd.DataFrame:
+    """ Converts the sentences back to tabular data
+
+    Args:
+        text: List of the tabular data in text form
+        df_gen: Pandas DataFrame where the tabular data is appended
+
+    Returns:
+        Pandas DataFrame with the tabular data from the text appended
     """
     columns = df_gen.columns.to_list()
 

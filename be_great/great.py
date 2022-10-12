@@ -6,7 +6,6 @@ import logging
 
 import numpy as np
 import pandas as pd
-import random
 
 from tqdm import tqdm
 
@@ -23,17 +22,40 @@ from be_great.great_utils import _array_to_dataframe, _get_column_distribution, 
 
 
 class GReaT:
-    """ The GREAT pipeline.
-        :param llm: HuggingFace Checkpoint to a pretrained large language model
-        :param experiment_dir: Directory name where the training checkpoints will be saved
-        :param epochs: Number of epochs to fine-tune the model
-        :param batch_size: Batch size used for fine-tuning
-        :param train_kwargs: TrainingArguments used by the HuggingFaceLibrary, see here the full list
-                https://huggingface.co/docs/transformers/main/en/main_classes/trainer#transformers.TrainingArguments
+    """ GReaT Class
+
+    The GReaT class handles the whole generation flow. It is used to fine-tune a large language model for tabular data,
+    and to sample synthetic tabular data.
+
+    Attributes:
+        llm (str): HuggingFace checkpoint of a pretrained large language model, used a basis of our model
+        tokenizer (AutoTokenizer): Tokenizer, automatically downloaded from llm-checkpoint
+        model (AutoModelForCausalLM): Large language model, automatically downloaded from llm-checkpoint
+        experiment_dir (str): Directory, where the training checkpoints will be saved
+        epochs (int): Number of epochs to fine-tune the model
+        batch_size (int): Batch size used for fine-tuning
+        train_hyperparameters (dict): Additional hyperparameters added to the TrainingArguments used by the
+         HuggingFaceLibrary, see here the full list of all possible values
+         https://huggingface.co/docs/transformers/main/en/main_classes/trainer#transformers.TrainingArguments
+        columns (list): List of all features/columns of the tabular dataset
+        num_cols (list): List of all numerical features/columns of the tabular dataset
+        conditional_col (str): Name of a feature/column on which the sampling can be conditioned
+        conditional_col_dist (dict | list): Distribution of the feature/column specified by condtional_col
     """
 
-    def __init__(self, llm: str, experiment_dir="trainer_great", epochs=100, batch_size=8, max_length=100,
-                 **train_kwargs):
+    def __init__(self, llm: str, experiment_dir: str = "trainer_great", epochs: int = 100,
+                 batch_size: int = 8, **train_kwargs):
+        """ Initializes GReaT.
+
+        Args:
+            llm: HuggingFace checkpoint of a pretrained large language model, used a basis of our model
+            experiment_dir:  Directory, where the training checkpoints will be saved
+            epochs: Number of epochs to fine-tune the model
+            batch_size: Batch size used for fine-tuning
+            train_kwargs: Additional hyperparameters added to the TrainingArguments used by the HuggingFaceLibrary,
+             see here the full list of all possible values
+             https://huggingface.co/docs/transformers/main/en/main_classes/trainer#transformers.TrainingArguments
+        """
         # Load Model and Tokenizer from HuggingFace
         self.llm = llm
         self.tokenizer = AutoTokenizer.from_pretrained(self.llm)
@@ -52,16 +74,22 @@ class GReaT:
         self.conditional_col = None
         self.conditional_col_dist = None
 
-    def fit(self, data: tp.Union[pd.DataFrame, np.ndarray], column_names=None, conditional_col=None,
-            resume_from_checkpoint=False) -> GReaTTrainer:
-        """ Fine-tune a pretrained large language model to tabular data
-            :param data: Pandas DataFrame or Numpy Array. Contains the tabular data
-            :param column_names: List. If data is Numpy Array, the feature names have to be defined. If data is Pandas
+    def fit(self, data: tp.Union[pd.DataFrame, np.ndarray], column_names: tp.Optional[tp.List[str]] = None,
+            conditional_col: tp.Optional[str] = None, resume_from_checkpoint: tp.Union[bool, str] = False) \
+            -> GReaTTrainer:
+        """ Fine-tune GReaT using tabular data.
+
+        Args:
+            data: Pandas DataFrame or Numpy Array that contains the tabular data
+            column_names: If data is Numpy Array, the feature names have to be defined. If data is Pandas
             DataFrame, the value is ignored
-            :param conditional_col: String. If given, the distribution of this column is saved and used as a starting
+            conditional_col: If given, the distribution of this column is saved and used as a starting
             point for the generation process later. If None, the last column is considered as conditional feature
-            :param resume_from_checkpoint: If True, resumes training from the latest checkpoint in the experiment_dir.
+            resume_from_checkpoint: If True, resumes training from the latest checkpoint in the experiment_dir.
             If path, resumes the training from the given checkpoint (has to be a valid HuggingFace checkpoint!)
+
+        Returns:
+            GReaTTrainer used for the fine-tuning process
         """
         df = _array_to_dataframe(data, columns=column_names)
         self._update_column_information(df)
@@ -86,23 +114,29 @@ class GReaT:
         great_trainer.train(resume_from_checkpoint=resume_from_checkpoint)
         return great_trainer
 
-    def sample(self, n_samples: int, start_col="", start_col_dist=None,
-               temperature=0.7, k=100, max_length=100, device="cuda") -> pd.DataFrame:
-        """ Generate new synthetic samples
-            :param n_samples: Number of samples to generate
-            :param start_col: Feature to use as starting point for the generation process. If not given, the target
-            learned during the fitting is used as starting point
-            :param start_col_dist: Feature distribution of the starting feature. Should have the format
-            "{F1: p1, F2: p2, ...}" for discrete columns or be a list of possible values for continuous columns.
-            If not given, the target distribution learned during the fitting is used as starting point
-            :param temperature: The generation samples each token from the probability distribution given by a softmax
+    def sample(self, n_samples: int,
+               start_col: tp.Optional[str] = "", start_col_dist: tp.Optional[tp.Union[dict, list]] = None,
+               temperature: float = 0.7, k: int = 100, max_length: int = 100, device: str = "cuda") -> pd.DataFrame:
+        """ Generate synthetic tabular data samples
+
+        Args:
+            n_samples: Number of synthetic samples to generate
+            start_col: Feature to use as starting point for the generation process. If not given, the target
+             learned during the fitting is used as starting point
+            start_col_dist: Feature distribution of the starting feature. Should have the format
+             "{F1: p1, F2: p2, ...}" for discrete columns or be a list of possible values for continuous columns.
+             If not given, the target distribution learned during the fitting is used as starting point
+            temperature: The generation samples each token from the probability distribution given by a softmax
              function. The temperature parameter controls the softmax function. A low temperature makes it sharper
-            (0 equals greedy search), a high temperature brings more diversity but also uncertainty into the output.
-            See this blog article (https://huggingface.co/blog/how-to-generate) to read more about the generation
-            process
-            :param k: Sampling Batch Size. Set as high as possible. Speeds up the generation process significantly
-            :param max_length: Maximal number of tokens to generate - has to be long enough to not cut any information!
-            :param device: Set to "cpu" if the GPU should not be used. You can also specify the concrete GPU
+             (0 equals greedy search), a high temperature brings more diversity but also uncertainty into the output.
+             See this blog article (https://huggingface.co/blog/how-to-generate) to read more about the generation
+             process
+            k: Sampling Batch Size. Set as high as possible. Speeds up the generation process significantly
+            max_length: Maximal number of tokens to generate - has to be long enough to not cut any information!
+            device: Set to "cpu" if the GPU should not be used. You can also specify the concrete GPU
+
+        Returns:
+            Pandas DataFrame with n_samples rows of generated data
         """
         great_start = self._get_start_sampler(start_col, start_col_dist)
 
@@ -131,6 +165,8 @@ class GReaT:
                 for i_num_cols in self.num_cols:
                     df_gen = df_gen[pd.to_numeric(df_gen[i_num_cols], errors='coerce').notnull()]
 
+                df_gen[self.num_cols] = df_gen[self.num_cols].astype(np.float)
+
                 # Remove rows with missing values
                 df_gen = df_gen.drop(df_gen[df_gen.isna().any(axis=1)].index)
 
@@ -141,20 +177,26 @@ class GReaT:
         df_gen = df_gen.reset_index(drop=True)
         return df_gen.head(n_samples)
 
-    def great_sample(self, starting_prompts: tp.Union[str, list[str]], temperature=0.7, max_length=100, device="cuda"):
-        """ Generate samples conditioned on an arbitrary input.
-            :param starting_prompts: String or List of Strings on which the output is conditioned. For example,
-            "Sex is female, Age is 26".
-            :param temperature: The generation samples each token from the probability distribution given by a softmax
-            function. The temperature parameter controls the softmax function. A low temperature makes it sharper
-            (0 equals greedy search), a high temperature brings more diversity but also uncertainty into the output.
-            See this blog article (https://huggingface.co/blog/how-to-generate) to read more about the generation
-            process.
-            :param max_length: Maximal number of tokens to generate - has to be long enough to not cut any information
-            :param device: Set to "cpu" if the GPU should not be used. You can also specify the concrete GPU.
-            
-            ToDo: Set n_samples to generate more samples for one conditional input.
+    def great_sample(self, starting_prompts: tp.Union[str, list[str]], temperature: float = 0.7, max_length: int = 100,
+                     device: str = "cuda"):
+        """ Generate synthetic tabular data samples conditioned on an given input.
+
+        Args:
+            starting_prompts: String or List of Strings on which the output is conditioned.
+             For example, "Sex is female, Age is 26"
+            temperature: The generation samples each token from the probability distribution given by a softmax
+             function. The temperature parameter controls the softmax function. A low temperature makes it sharper
+             (0 equals greedy search), a high temperature brings more diversity but also uncertainty into the output.
+             See this blog article (https://huggingface.co/blog/how-to-generate) to read more about the generation
+             process.
+            max_length: Maximal number of tokens to generate - has to be long enough to not cut any information
+            device: Set to "cpu" if the GPU should not be used. You can also specify the concrete GPU.
+
+         Returns:
+            Pandas DataFrame with synthetic data generated based on starting_prompts
         """
+        # ToDo: Add n_samples argument to generate more samples for one conditional input.
+
         self.model.to(device)
         starting_prompts = [starting_prompts] if isinstance(starting_prompts, str) else starting_prompts
         generated_data = []
@@ -175,8 +217,12 @@ class GReaT:
         return df_gen
 
     def save(self, path: str):
-        """ Save Model
-            :param path: Directory to save model
+        """ Save GReaT Model
+
+        Saves the model weights and a configuration file in the given directory.
+
+        Args:
+            path: Path where to save the model
         """
         # Make directory
         if os.path.isdir(path):
@@ -200,15 +246,26 @@ class GReaT:
         torch.save(self.model.state_dict(), path + "/model.pt")
 
     def load_finetuned_model(self, path: str):
-        """ Load the weights of a fine-tuned large language model into the be_great pipeline
-            :param path: Path to the fine-tuned model
+        """ Load fine-tuned model
+
+        Load the weights of a fine-tuned large language model into the GReaT pipeline
+
+        Args:
+            path: Path to the fine-tuned model
         """
         self.model.load_state_dict(torch.load(path))
 
     @classmethod
     def load_from_dir(cls, path: str):
-        """ Load be_great class from directory
-            :param path: Directory where model is saved
+        """ Load GReaT class
+
+        Load trained GReaT model from directory.
+
+        Args:
+            path: Directory where GReaT model is saved
+
+        Returns:
+            New instance of GReaT loaded from directory
         """
         assert os.path.isdir(path), f"Directory {path} does not exist."
 
@@ -228,12 +285,12 @@ class GReaT:
 
         return great
 
-    def _update_column_information(self, df):
+    def _update_column_information(self, df: pd.DataFrame):
         # Update the column names (and numerical columns for some sanity checks after sampling)
         self.columns = df.columns.to_list()
         self.num_cols = df.select_dtypes(include=np.number).columns.to_list()
 
-    def _update_conditional_information(self, df, conditional_col=None):
+    def _update_conditional_information(self, df: pd.DataFrame, conditional_col: tp.Optional[str] = None):
         assert conditional_col is None or isinstance(conditional_col, str), \
             f"The column name has to be a string and not {type(conditional_col)}"
         assert conditional_col is None or conditional_col in df.columns, \
