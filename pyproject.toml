@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "be_great"
-version = "0.0.1"
+version = "0.0.3"
 authors = [
   { name="Kathrin Sessler", email="kathrin.sessler@tum.de" },
 ]
@@ -30,6 +30,7 @@ dependencies = [
 
 [project.urls]
 "Homepage" = "https://github.com/kathrinse/be_great"
+"Documentation" = "https://kathrinse.github.io/be_great/"
 
 [tool.setuptools]
 packages = ["be_great"]

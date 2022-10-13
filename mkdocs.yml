@@ -1,0 +1,6 @@
+site_name: GReaT
+theme: readthedocs
+plugins:
+    - search
+    - awesome-pages
+    - mkdocs-jupyter
