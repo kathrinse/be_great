@@ -178,8 +178,8 @@ class GReaT:
         return df_gen.head(n_samples)
 
     def great_sample(self, starting_prompts: tp.Union[str, list[str]], temperature: float = 0.7, max_length: int = 100,
-                     device: str = "cuda"):
-        """ Generate synthetic tabular data samples conditioned on an given input.
+                     device: str = "cuda") -> pd.DataFrame:
+        """ Generate synthetic tabular data samples conditioned on a given input.
 
         Args:
             starting_prompts: String or List of Strings on which the output is conditioned.
