@@ -14,7 +14,7 @@
 &nbsp;
 
 Our GReaT framework utilizes the capabilities of pretrained large language Transformer models to synthesize realistic tabular data. 
-New samples are generated with just a few lines of code, following an easy-to-use API.
+New samples are generated with just a few lines of code, following an easy-to-use API. Please see our [publication](https://arxiv.org/abs/2210.06280) for more details. 
 
 ## GReaT Installation
 
@@ -39,12 +39,17 @@ model.fit(data)
 synthetic_data = model.sample(n_samples=100)
 ```
 
-## GReaT Citation 
-If you use GReaT, please link or cite our work:
-```tex
-@article{
-}
-```
+[//]: # (## GReaT Citation )
+
+[//]: # (If you use GReaT, please link or cite our work:)
+
+[//]: # (```tex)
+
+[//]: # (@article{)
+
+[//]: # (})
+
+[//]: # (```)
 
 ## GReaT Acknowledgements
 
