@@ -40,7 +40,7 @@ def _get_column_distribution(df: pd.DataFrame, col: str) -> tp.Union[list, dict]
         Distribution of the column
     """
     if df[col].dtype == "float":
-        col_dist = df[col].to_numpy()
+        col_dist = df[col].to_list()
     else:
         col_dist = df[col].value_counts(1).to_dict()
     return col_dist
@@ -78,17 +78,17 @@ def _convert_text_to_tabular_data(text: tp.List[str], df_gen: pd.DataFrame) -> p
         Pandas DataFrame with the tabular data from the text appended
     """
     columns = df_gen.columns.to_list()
-
+        
     # Convert text to tabular data
     for t in text:
         features = t.split(",")
         td = dict.fromkeys(columns)
-
+        
         # Transform all features back to tabular data
         for f in features:
             values = f.strip().split(" is ")
             if values[0] in columns and not td[values[0]]:
                 td[values[0]] = [values[1]]
-
+                
         df_gen = pd.concat([df_gen, pd.DataFrame(td)], ignore_index=True, axis=0)
     return df_gen

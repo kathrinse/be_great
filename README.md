@@ -9,6 +9,10 @@
 <br> with pretrained Transformer-based language models
 </p>
 
+&nbsp;
+&nbsp;
+&nbsp;
+
 Our GReaT framework utilizes the capabilities of pretrained large language Transformer models to synthesize realistic tabular data. 
 New samples are generated with just a few lines of code, following an easy-to-use API.
 
@@ -45,4 +49,4 @@ If you use GReaT, please link or cite our work:
 
 ## GReaT Acknowledgements
 
-We sincerely thank [HuggingFace](https://huggingface.co/) :hugs: framework. 
+We sincerely thank the [HuggingFace](https://huggingface.co/) :hugs: framework. 
