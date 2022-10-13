@@ -1,0 +1,4 @@
+title: Examples
+nav:
+    - Example_Iris.ipynb
+    - Example_California_Housing.ipynb

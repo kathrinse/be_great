@@ -1,0 +1,7 @@
+title: API Reference
+nav:
+    - Overview: README.md
+    - GReaT: great.md
+    - GReaTDataset: great_dataset.md
+    - GReaTStart: great_start.md
+    - GReaTTrainer: great_trainer.md
