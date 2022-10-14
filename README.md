@@ -39,17 +39,18 @@ model.fit(data)
 synthetic_data = model.sample(n_samples=100)
 ```
 
-[//]: # (## GReaT Citation )
+## GReaT Citation 
 
-[//]: # (If you use GReaT, please link or cite our work:)
+If you use GReaT, please link or cite our work:
 
-[//]: # (```tex)
-
-[//]: # (@article{)
-
-[//]: # (})
-
-[//]: # (```)
+```latex
+@article{borisov2022language,
+  title={Language Models are Realistic Tabular Data Generators},
+  author={Borisov, Vadim and Se{\ss}ler, Kathrin and Leemann, Tobias and Pawelczyk, Martin and Kasneci, Gjergji},
+  journal={arXiv preprint arXiv:2210.06280},
+  year={2022}
+}
+```
 
 ## GReaT Acknowledgements
 
