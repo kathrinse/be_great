@@ -43,7 +43,7 @@ synthetic_data = model.sample(n_samples=100)
 
 If you use GReaT, please link or cite our work:
 
-```latex
+``` bibtex
 @article{borisov2022language,
   title={Language Models are Realistic Tabular Data Generators},
   author={Borisov, Vadim and Se{\ss}ler, Kathrin and Leemann, Tobias and Pawelczyk, Martin and Kasneci, Gjergji},
