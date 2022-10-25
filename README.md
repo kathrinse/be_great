@@ -18,7 +18,7 @@ New samples are generated with just a few lines of code, following an easy-to-us
 
 ## GReaT Installation
 
-The GReaT framework can be easily installed using with [pip](https://pypi.org/project/pip/): 
+The GReaT framework can be easily installed using with [pip](https://pypi.org/project/pip/) - requires a Python version >= 3.9: 
 ```bash
 pip install be-great
 ```
