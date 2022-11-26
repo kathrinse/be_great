@@ -34,7 +34,7 @@ from sklearn.datasets import fetch_california_housing
 
 data = fetch_california_housing(as_frame=True).frame
 
-model = GReaT(llm='distilgpt2', epochs=50)
+model = GReaT(llm='distilgpt2', batch_size=32, epochs=50)
 model.fit(data)
 synthetic_data = model.sample(n_samples=100)
 ```
