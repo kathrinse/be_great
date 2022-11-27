@@ -5,3 +5,5 @@ scikit_learn >= 1.1.1
 torch >= 1.10.2
 tqdm >= 4.64.1
 transformers >= 4.22.1
+pyarrow >=6.0.0
+
