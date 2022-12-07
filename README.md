@@ -38,6 +38,8 @@ model = GReaT(llm='distilgpt2', batch_size=32, epochs=50)
 model.fit(data)
 synthetic_data = model.sample(n_samples=100)
 ```
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kathrinse/be_great/blob/main/examples/GReaT_colab_example.ipynb]
+
 
 ## GReaT Citation 
 
