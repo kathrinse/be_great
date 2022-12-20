@@ -152,7 +152,6 @@ class GReaT:
             while n_samples > df_gen.shape[0]:
                 start_tokens = great_start.get_start_tokens(k)
                 start_tokens = torch.tensor(start_tokens).to(device)
-                print(start_tokens.shape)
 
                 # Generate tokens
                 tokens = self.model.generate(input_ids=start_tokens, max_length=max_length,
@@ -255,6 +254,7 @@ class GReaT:
                 is_complete = False
                 retries = 0
                 df_curr = df_miss.iloc[[index]]
+                org_index = df_curr.index
                 while not is_complete:
                     num_attrs_missing = pd.isna(df_curr).sum().sum()
                     #print("Number of missing values: ",  num_attrs_missing)
@@ -271,7 +271,7 @@ class GReaT:
                     nans = df_curr.isna()
                     if not df_curr.isna().any().any():
                         is_complete = True
-                        df_list.append(df_curr.copy())
+                        df_list.append(df_curr.set_index(org_index))
                     else:
                         retries += 1
                     if retries == max_retries:
@@ -279,7 +279,7 @@ class GReaT:
                         break
                 index +=1
                 pbar.update(1)
-        return pd.concat(df_list, axis=0, ignore_index=True)
+        return pd.concat(df_list, axis=0)
 
     def save(self, path: str):
         """ Save GReaT Model
