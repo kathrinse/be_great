@@ -14,7 +14,7 @@
 &nbsp;
 
 Our GReaT framework utilizes the capabilities of pretrained large language Transformer models to synthesize realistic tabular data. 
-New samples are generated with just a few lines of code, following an easy-to-use API. Please see our [publication](https://arxiv.org/abs/2210.06280) for more details. 
+New samples are generated with just a few lines of code, following an easy-to-use API. Please see our [publication](https://openreview.net/forum?id=cEygmQNOeI) for more details. 
 
 ## GReaT Installation
 
@@ -47,11 +47,12 @@ synthetic_data = model.sample(n_samples=100)
 If you use GReaT, please link or cite our work:
 
 ``` bibtex
-@article{borisov2022language,
+@inproceedings{borisov2023language,
   title={Language Models are Realistic Tabular Data Generators},
-  author={Borisov, Vadim and Se{\ss}ler, Kathrin and Leemann, Tobias and Pawelczyk, Martin and Kasneci, Gjergji},
-  journal={arXiv preprint arXiv:2210.06280},
-  year={2022}
+  author={Vadim Borisov and Kathrin Sessler and Tobias Leemann and Martin Pawelczyk and Gjergji Kasneci},
+  booktitle={The Eleventh International Conference on Learning Representations },
+  year={2023},
+  url={https://openreview.net/forum?id=cEygmQNOeI}
 }
 ```
 
