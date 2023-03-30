@@ -165,7 +165,7 @@ class GReaT:
                 for i_num_cols in self.num_cols:
                     df_gen = df_gen[pd.to_numeric(df_gen[i_num_cols], errors='coerce').notnull()]
 
-                df_gen[self.num_cols] = df_gen[self.num_cols].astype(np.float)
+                df_gen[self.num_cols] = df_gen[self.num_cols].astype(float)
 
                 # Remove rows with missing values
                 df_gen = df_gen.drop(df_gen[df_gen.isna().any(axis=1)].index)
