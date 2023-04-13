@@ -19,7 +19,7 @@ from be_great.great_start import GReaTStart, CategoricalStart, ContinuousStart, 
 from be_great.great_trainer import GReaTTrainer
 from be_great.great_utils import _array_to_dataframe, _get_column_distribution, _convert_tokens_to_text, \
     _convert_text_to_tabular_data
-
+from peft import LoraConfig, get_peft_model, prepare_model_for_int8_training, TaskType
 
 class GReaT:
     """ GReaT Class
@@ -61,6 +61,22 @@ class GReaT:
         self.tokenizer = AutoTokenizer.from_pretrained(self.llm)
         self.tokenizer.pad_token = self.tokenizer.eos_token
         self.model = AutoModelForCausalLM.from_pretrained(self.llm)
+
+        # Define LoRA Config
+        lora_config = LoraConfig(
+            r=16, # only training 0.16% of the parameters of the model
+            lora_alpha=32,
+            target_modules=["c_attn"], # this is specific for gpt2 model, to be adapted
+            lora_dropout=0.05,
+            bias="none",
+            task_type=TaskType.CAUSAL_LM # this is specific for gpt2 model, to be adapted
+        )
+        # prepare int-8 model for training
+        self.model = prepare_model_for_int8_training(self.model)
+        # add LoRA adaptor
+        self.model = get_peft_model(self.model, lora_config)
+        self.model.print_trainable_parameters()
+
 
         # Set the training hyperparameters
         self.experiment_dir = experiment_dir
