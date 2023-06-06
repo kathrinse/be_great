@@ -18,7 +18,7 @@ from be_great.great_dataset import GReaTDataset, GReaTDataCollator
 from be_great.great_start import GReaTStart, CategoricalStart, ContinuousStart, RandomStart
 from be_great.great_trainer import GReaTTrainer
 from be_great.great_utils import _array_to_dataframe, _get_column_distribution, _convert_tokens_to_text, \
-    _convert_text_to_tabular_data
+    _convert_text_to_tabular_data, bcolors
 
 
 class GReaT:
@@ -149,31 +149,46 @@ class GReaT:
         # Start generation process
         with tqdm(total=n_samples) as pbar:
             already_generated = 0
-            while n_samples > df_gen.shape[0]:
-                start_tokens = great_start.get_start_tokens(k)
-                start_tokens = torch.tensor(start_tokens).to(device)
+            _cnt = 0
+            try:
+                while n_samples > df_gen.shape[0]:
+                    start_tokens = great_start.get_start_tokens(k)
+                    start_tokens = torch.tensor(start_tokens).to(device)
 
-                # Generate tokens
-                tokens = self.model.generate(input_ids=start_tokens, max_length=max_length,
-                                             do_sample=True, temperature=temperature, pad_token_id=50256)
+                    # Generate tokens
+                    tokens = self.model.generate(input_ids=start_tokens, max_length=max_length,
+                                                 do_sample=True, temperature=temperature, pad_token_id=50256)
 
-                # Convert tokens back to tabular data
-                text_data = _convert_tokens_to_text(tokens, self.tokenizer)
-                df_gen = _convert_text_to_tabular_data(text_data, df_gen)
+                    # Convert tokens back to tabular data
+                    text_data = _convert_tokens_to_text(tokens, self.tokenizer)
+                    df_gen = _convert_text_to_tabular_data(text_data, df_gen)
 
-                # Remove rows with flawed numerical values
-                for i_num_cols in self.num_cols:
-                    df_gen = df_gen[pd.to_numeric(df_gen[i_num_cols], errors='coerce').notnull()]
+                    # Remove rows with flawed numerical values
+                    for i_num_cols in self.num_cols:
+                        df_gen = df_gen[pd.to_numeric(
+                            df_gen[i_num_cols], errors='coerce').notnull()]
 
-                df_gen[self.num_cols] = df_gen[self.num_cols].astype(float)
+                    df_gen[self.num_cols] = df_gen[self.num_cols].astype(float)
 
-                # Remove rows with missing values
-                df_gen = df_gen.drop(df_gen[df_gen.isna().any(axis=1)].index)
+                    # Remove rows with missing values
+                    df_gen = df_gen.drop(
+                        df_gen[df_gen.isna().any(axis=1)].index)
 
-                # Update process bar
-                pbar.update(df_gen.shape[0] - already_generated)
-                already_generated = df_gen.shape[0]
-
+                    # Update process bar
+                    pbar.update(df_gen.shape[0] - already_generated)
+                    already_generated = df_gen.shape[0]
+                    
+                    # Check if we actually generating synth samples and if not break everything 
+                    _cnt += 1
+                    if _cnt > 13 and already_generated == 0:  # (:
+                        raise Exception('Breaking the generation loop!')
+                        
+            except Exception as e:
+                print(f"{bcolors.FAIL}An error has occurred: {str(e)}{bcolors.ENDC}")
+                print(f"{bcolors.WARNING}To address this issue, consider fine-tuning the GReaT model for an extended period. This can be achieved by increasing the number of epochs.{bcolors.ENDC}")
+                print(f"{bcolors.WARNING}Alternatively, you might increase the max_length parameter within the sample function. For example: model.sample(n_samples=10, max_length=2000){bcolors.ENDC}")
+                print(f"{bcolors.OKBLUE}If the problem persists despite these adjustments, feel free to raise an issue on our GitHub page at: https://github.com/kathrinse/be_great/issues{bcolors.ENDC}")
+            
         df_gen = df_gen.reset_index(drop=True)
         return df_gen.head(n_samples)
 
@@ -198,12 +213,14 @@ class GReaT:
         # ToDo: Add n_samples argument to generate more samples for one conditional input.
 
         self.model.to(device)
-        starting_prompts = [starting_prompts] if isinstance(starting_prompts, str) else starting_prompts
+        starting_prompts = [starting_prompts] if isinstance(
+            starting_prompts, str) else starting_prompts
         generated_data = []
 
         # Generate a sample for each starting point
         for prompt in tqdm(starting_prompts):
-            start_token = torch.tensor(self.tokenizer(prompt)["input_ids"]).to(device)
+            start_token = torch.tensor(self.tokenizer(prompt)[
+                                       "input_ids"]).to(device)
 
             # Generate tokens
             gen = self.model.generate(input_ids=torch.unsqueeze(start_token, 0), max_length=max_length,
@@ -212,7 +229,8 @@ class GReaT:
 
         # Convert Text back to Tabular Data
         decoded_data = _convert_tokens_to_text(generated_data, self.tokenizer)
-        df_gen = _convert_text_to_tabular_data(decoded_data, pd.DataFrame(columns=self.columns))
+        df_gen = _convert_text_to_tabular_data(
+            decoded_data, pd.DataFrame(columns=self.columns))
 
         return df_gen
 
@@ -226,7 +244,8 @@ class GReaT:
         """
         # Make directory
         if os.path.isdir(path):
-            warnings.warn(f"Directory {path} already exists and is overwritten now.")
+            warnings.warn(
+                f"Directory {path} already exists and is overwritten now.")
         else:
             os.mkdir(path)
 
@@ -238,7 +257,8 @@ class GReaT:
 
             # NDArray is not JSON serializable and therefore has to be converted into a list.
             if isinstance(attributes["conditional_col_dist"], np.ndarray):
-                attributes["conditional_col_dist"] = list(attributes["conditional_col_dist"])
+                attributes["conditional_col_dist"] = list(
+                    attributes["conditional_col_dist"])
 
             json.dump(attributes, f)
 
@@ -281,7 +301,8 @@ class GReaT:
             setattr(great, k, v)
 
         # Load model weights
-        great.model.load_state_dict(torch.load(path + "/model.pt", map_location="cpu"))
+        great.model.load_state_dict(torch.load(
+            path + "/model.pt", map_location="cpu"))
 
         return great
 
@@ -298,14 +319,17 @@ class GReaT:
 
         # Take the distribution of the conditional column for a starting point in the generation process
         self.conditional_col = conditional_col if conditional_col else df.columns[-1]
-        self.conditional_col_dist = _get_column_distribution(df, self.conditional_col)
+        self.conditional_col_dist = _get_column_distribution(
+            df, self.conditional_col)
 
     def _get_start_sampler(self, start_col: tp.Optional[str],
                            start_col_dist: tp.Optional[tp.Union[tp.Dict, tp.List]]) -> GReaTStart:
         if start_col and start_col_dist is None:
-            raise ValueError(f"Start column {start_col} was given, but no corresponding distribution.")
+            raise ValueError(
+                f"Start column {start_col} was given, but no corresponding distribution.")
         if start_col_dist is not None and not start_col:
-            raise ValueError(f"Start column distribution {start_col} was given, the column name is missing.")
+            raise ValueError(
+                f"Start column distribution {start_col} was given, the column name is missing.")
 
         assert start_col is None or isinstance(start_col, str), \
             f"The column name has to be a string and not {type(start_col)}"

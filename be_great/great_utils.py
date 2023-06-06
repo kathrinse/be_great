@@ -96,3 +96,11 @@ def _convert_text_to_tabular_data(text: tp.List[str], df_gen: pd.DataFrame) -> p
                 
         df_gen = pd.concat([df_gen, pd.DataFrame(td)], ignore_index=True, axis=0)
     return df_gen
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
