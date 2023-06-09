@@ -18,7 +18,8 @@ from be_great.great_dataset import GReaTDataset, GReaTDataCollator
 from be_great.great_start import GReaTStart, CategoricalStart, ContinuousStart, RandomStart
 from be_great.great_trainer import GReaTTrainer
 from be_great.great_utils import _array_to_dataframe, _get_column_distribution, _convert_tokens_to_text, \
-    _convert_text_to_tabular_data, bcolors
+_convert_text_to_tabular_data, bcolors
+from peft import LoraConfig, get_peft_model, prepare_model_for_int8_training, TaskType
 
 
 class GReaT:
@@ -44,7 +45,7 @@ class GReaT:
     """
 
     def __init__(self, llm: str, experiment_dir: str = "trainer_great", epochs: int = 100,
-                 batch_size: int = 8, **train_kwargs):
+                 batch_size: int = 8, efficient_finetuning: str = "", **train_kwargs):
         """ Initializes GReaT.
 
         Args:
@@ -52,15 +53,34 @@ class GReaT:
             experiment_dir:  Directory, where the training checkpoints will be saved
             epochs: Number of epochs to fine-tune the model
             batch_size: Batch size used for fine-tuning
+            efficient_finetuning: Indication of fune-tuning method
             train_kwargs: Additional hyperparameters added to the TrainingArguments used by the HuggingFaceLibrary,
              see here the full list of all possible values
              https://huggingface.co/docs/transformers/main/en/main_classes/trainer#transformers.TrainingArguments
         """
         # Load Model and Tokenizer from HuggingFace
+        self.efficient_finetuning = efficient_finetuning
         self.llm = llm
         self.tokenizer = AutoTokenizer.from_pretrained(self.llm)
         self.tokenizer.pad_token = self.tokenizer.eos_token
         self.model = AutoModelForCausalLM.from_pretrained(self.llm)
+
+        if self.efficient_finetuning == lora:
+            # Define LoRA Config
+            lora_config = LoraConfig(
+                r=16, # only training 0.16% of the parameters of the model
+                lora_alpha=32,
+                target_modules=["c_attn"], # this is specific for gpt2 model, to be adapted
+                lora_dropout=0.05,
+                bias="none",
+                task_type=TaskType.CAUSAL_LM # this is specific for gpt2 model, to be adapted
+            )
+            # prepare int-8 model for training
+            self.model = prepare_model_for_int8_training(self.model)
+            # add LoRA adaptor
+            self.model = get_peft_model(self.model, lora_config)
+            self.model.print_trainable_parameters()
+
 
         # Set the training hyperparameters
         self.experiment_dir = experiment_dir
