@@ -15,12 +15,11 @@ from transformers import (AutoTokenizer,
                           TrainingArguments)
 
 from be_great.great_dataset import GReaTDataset, GReaTDataCollator
-from be_great.great_start import GReaTStart, CategoricalStart, ContinuousStart, RandomStart
+from be_great.great_start import GReaTStart, CategoricalStart, ContinuousStart, RandomStart, _pad_tokens
 from be_great.great_trainer import GReaTTrainer
 from be_great.great_utils import _array_to_dataframe, _get_column_distribution, _convert_tokens_to_text, \
-_convert_text_to_tabular_data, bcolors
+    _convert_text_to_tabular_data, _partial_df_to_promts, bcolors
 from peft import LoraConfig, get_peft_model, prepare_model_for_int8_training, TaskType
-
 
 class GReaT:
     """ GReaT Class
@@ -65,7 +64,7 @@ class GReaT:
         self.tokenizer.pad_token = self.tokenizer.eos_token
         self.model = AutoModelForCausalLM.from_pretrained(self.llm)
 
-        if self.efficient_finetuning == lora:
+        if self.efficient_finetuning == "lora":
             # Define LoRA Config
             lora_config = LoraConfig(
                 r=16, # only training 0.16% of the parameters of the model
@@ -238,9 +237,12 @@ class GReaT:
         generated_data = []
 
         # Generate a sample for each starting point
-        for prompt in tqdm(starting_prompts):
-            start_token = torch.tensor(self.tokenizer(prompt)[
-                                       "input_ids"]).to(device)
+        if len(starting_prompts) > 1:
+            loop_iter = tqdm(starting_prompts)
+        else:
+            loop_iter = starting_prompts
+        for prompt in loop_iter:
+            start_token = torch.tensor(self.tokenizer(prompt)["input_ids"]).to(device)
 
             # Generate tokens
             gen = self.model.generate(input_ids=torch.unsqueeze(start_token, 0), max_length=max_length,
@@ -253,6 +255,67 @@ class GReaT:
             decoded_data, pd.DataFrame(columns=self.columns))
 
         return df_gen
+
+    def impute(self, df_miss: pd.DataFrame, temperature: float = 0.7, k: int = 100, 
+        max_length: int = 100, max_retries=15,  device: str = "cuda") -> pd.DataFrame:
+        """ Impute a DataFrame with missing values using a trained GReaT model.
+        Args:
+            df_miss: pandas data frame of the exact same format (column names, value ranges/types) as the data that
+             was used to train the GReaT model, however some values might be missing, which is indicated by the value of NaN.
+             This function will sample the missing values conditioned on the remaining values.
+            temperature: The generation samples each token from the probability distribution given by a softmax
+             function. The temperature parameter controls the softmax function. A low temperature makes it sharper
+             (0 equals greedy search), a high temperature brings more diversity but also uncertainty into the output.
+             See this blog article (https://huggingface.co/blog/how-to-generate) to read more about the generation
+             process
+            k: Sampling Batch Size. Set as high as possible. Speeds up the generation process significantly
+            max_length: Maximal number of tokens to generate - has to be long enough to not cut any information!
+            device: Set to "cpu" if the GPU should not be used. You can also specify the specific GPU to run on.
+
+        Returns:
+            Pandas DataFrame with n_samples rows of generated data
+        """
+
+        # Check DataFrame passed.
+        if set(df_miss.columns) != set(self.columns):
+            raise ValueError("The column names in the DataFrame passed to impute do not match the columns of the GReaT model.")
+
+        self.model.to(device)
+
+        #start_token = torch.tensor(_pad_tokens(self.tokenizer(starting_prompts)["input_ids"])).to(device)
+        index = 0
+        df_list=[]
+        with tqdm(total=len(df_miss)) as pbar:
+            while index < len(df_miss):
+                is_complete = False
+                retries = 0
+                df_curr = df_miss.iloc[[index]]
+                org_index = df_curr.index # Keep index in new DataFrame
+                while not is_complete:
+                    num_attrs_missing = pd.isna(df_curr).sum().sum()
+                    #print("Number of missing values: ",  num_attrs_missing)
+                    # Generate text promt from current features.
+                    starting_prompts = _partial_df_to_promts(df_curr)
+                    df_curr = self.great_sample(starting_prompts, temperature, max_length, device=device)
+
+                    # Convert numerical values to float, flawed numerical values to NaN
+                    for i_num_cols in self.num_cols:
+                        df_curr[i_num_cols] = pd.to_numeric(df_curr[i_num_cols], errors='coerce')
+                    df_curr[self.num_cols] = df_curr[self.num_cols].astype(np.float)
+
+                    # Check for missing values
+                    nans = df_curr.isna()
+                    if not df_curr.isna().any().any():
+                        is_complete = True
+                        df_list.append(df_curr.set_index(org_index))
+                    else:
+                        retries += 1
+                    if retries == max_retries:
+                        warnings.warn("Max retries reached.")
+                        break
+                index +=1
+                pbar.update(1)
+        return pd.concat(df_list, axis=0)
 
     def save(self, path: str):
         """ Save GReaT Model
