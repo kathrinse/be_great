@@ -39,7 +39,12 @@ class GReaTDataset(Dataset):
 
         tokenized_text = self.tokenizer(shuffled_text)
         return tokenized_text
-
+        
+    def __getitems__(self, keys: tp.Union[int, slice, str, list]):
+        if isinstance(keys, list):
+            return [self._getitem(key) for key in keys]
+        else:
+            return self._getitem(keys)
 
 @dataclass
 class GReaTDataCollator(DataCollatorWithPadding):

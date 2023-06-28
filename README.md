@@ -1,3 +1,4 @@
+[![PyPI version](https://badge.fury.io/py/be-great.svg)](https://badge.fury.io/py/be-great) [![Downloads](https://static.pepy.tech/badge/be-great)](https://pepy.tech/project/be-great)
 
 [//]: # (![Screenshot]&#40;https://github.com/kathrinse/be_great/blob/main/imgs/GReaT_logo.png&#41;)
 <p align="center">
@@ -14,7 +15,7 @@
 &nbsp;
 
 Our GReaT framework utilizes the capabilities of pretrained large language Transformer models to synthesize realistic tabular data. 
-New samples are generated with just a few lines of code, following an easy-to-use API. Please see our [publication](https://arxiv.org/abs/2210.06280) for more details. 
+New samples are generated with just a few lines of code, following an easy-to-use API. Please see our [publication](https://openreview.net/forum?id=cEygmQNOeI) for more details. 
 
 ## GReaT Installation
 
@@ -34,21 +35,24 @@ from sklearn.datasets import fetch_california_housing
 
 data = fetch_california_housing(as_frame=True).frame
 
-model = GReaT(llm='distilgpt2', epochs=50)
+model = GReaT(llm='distilgpt2', batch_size=32, epochs=25)
 model.fit(data)
 synthetic_data = model.sample(n_samples=100)
 ```
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kathrinse/be_great/blob/main/examples/GReaT_colab_example.ipynb)
 
 ## GReaT Citation 
 
 If you use GReaT, please link or cite our work:
 
 ``` bibtex
-@article{borisov2022language,
+@inproceedings{borisov2023language,
   title={Language Models are Realistic Tabular Data Generators},
-  author={Borisov, Vadim and Se{\ss}ler, Kathrin and Leemann, Tobias and Pawelczyk, Martin and Kasneci, Gjergji},
-  journal={arXiv preprint arXiv:2210.06280},
-  year={2022}
+  author={Vadim Borisov and Kathrin Sessler and Tobias Leemann and Martin Pawelczyk and Gjergji Kasneci},
+  booktitle={The Eleventh International Conference on Learning Representations },
+  year={2023},
+  url={https://openreview.net/forum?id=cEygmQNOeI}
 }
 ```
 

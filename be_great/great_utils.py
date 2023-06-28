@@ -87,11 +87,13 @@ def _convert_text_to_tabular_data(text: tp.List[str], df_gen: pd.DataFrame) -> p
         for f in features:
             values = f.strip().split(" is ")
             if values[0] in columns and not td[values[0]]:
-                td[values[0]] = [values[1]]
-        #print(td)
-        df_gen = pd.concat([df_gen, pd.DataFrame(td, index=[0])], ignore_index=True, axis=0)
+                try:
+                    td[values[0]] = [values[1]]
+                except IndexError:
+                    #print("An Index Error occurred - if this happends a lot, consider fine-tuning your model further.")
+                    pass
+        df_gen = pd.concat([df_gen, pd.DataFrame(td)], ignore_index=True, axis=0)
     return df_gen
-
 def _encode_row_partial(row, shuffle=True):
     """ Function that takes a row and converts all columns into the text representation that are not NaN."""
     num_cols = len(row.index)
@@ -127,3 +129,10 @@ def _partial_df_to_promts(partial_df: pd.DataFrame):
     res = [((enc + ", ") if len(enc) > 0 else "") + (fst + " is" if fst is not None else "") for enc, fst in zip(res_encode, res_first)]
     return res
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
