@@ -42,6 +42,23 @@ synthetic_data = model.sample(n_samples=100)
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kathrinse/be_great/blob/main/examples/GReaT_colab_example.ipynb)
 
+### Imputing a sample
+GReaT also features an interface to impute, i.e., fill in, missing values in arbitrary combinations. This requires a trained ``model``, for instance one obtained using the code snippet above, and a ```pd.DataFrame``` where missing values are set to NaN.
+An minimal example is provided below:
+```python
+# test_data: pd.DataFrame with samples from the distribution
+# model: GReaT trained on the data distribution that should be imputed
+
+# Drop values randomly from test_data
+import numpy as np
+for clm in test_data.columns:
+    test_data[clm]=test_data[clm].apply(lambda x: (x if np.random.rand() > 0.5 else np.nan))
+
+imputed_data = model.impute(test_data, max_length=200)
+```
+
+
+
 ## GReaT Citation 
 
 If you use GReaT, please link or cite our work:
