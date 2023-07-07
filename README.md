@@ -44,7 +44,7 @@ synthetic_data = model.sample(n_samples=100)
 
 ### Imputing a sample
 GReaT also features an interface to impute, i.e., fill in, missing values in arbitrary combinations. This requires a trained ``model``, for instance one obtained using the code snippet above, and a ```pd.DataFrame``` where missing values are set to NaN.
-An minimal example is provided below:
+A minimal example is provided below:
 ```python
 # test_data: pd.DataFrame with samples from the distribution
 # model: GReaT trained on the data distribution that should be imputed
