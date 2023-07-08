@@ -259,10 +259,10 @@ class GReaT:
             except Exception as e:
                 print(f"{bcolors.FAIL}An error has occurred: {str(e)}{bcolors.ENDC}")
                 print(
-                    f"{bcolors.WARNING}To address this issue, consider fine-tuning the GReaT model for an extended period. This can be achieved by increasing the number of epochs.{bcolors.ENDC}"
+                    f"{bcolors.WARNING}To address this issue, consider fine-tuning the GReaT model for an longer period. This can be achieved by increasing the number of epochs.{bcolors.ENDC}"
                 )
                 print(
-                    f"{bcolors.WARNING}Alternatively, you might increase the max_length parameter within the sample function. For example: model.sample(n_samples=10, max_length=2000){bcolors.ENDC}"
+                    f"{bcolors.WARNING}Alternatively, you might consider increasing the max_length parameter within the sample function. For example: model.sample(n_samples=10, max_length=2000){bcolors.ENDC}"
                 )
                 print(
                     f"{bcolors.OKBLUE}If the problem persists despite these adjustments, feel free to raise an issue on our GitHub page at: https://github.com/kathrinse/be_great/issues{bcolors.ENDC}"
