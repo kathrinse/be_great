@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: be-great
-Version: 0.0.4
+Version: 0.0.5
 Summary: Generating Realistic Tabular Data using Large Language Models
 Author-email: Kathrin Sessler <kathrin.sessler@tum.de>
 License: MIT License
@@ -35,6 +35,7 @@ Requires-Python: >=3.9
 Description-Content-Type: text/markdown
 License-File: LICENSE
 
+[![PyPI version](https://badge.fury.io/py/be-great.svg)](https://badge.fury.io/py/be-great) [![Downloads](https://static.pepy.tech/badge/be-great)](https://pepy.tech/project/be-great)
 
 [//]: # (![Screenshot]&#40;https://github.com/kathrinse/be_great/blob/main/imgs/GReaT_logo.png&#41;)
 <p align="center">
@@ -71,13 +72,29 @@ from sklearn.datasets import fetch_california_housing
 
 data = fetch_california_housing(as_frame=True).frame
 
-model = GReaT(llm='distilgpt2', batch_size=32, epochs=50)
+model = GReaT(llm='distilgpt2', batch_size=32, epochs=25)
 model.fit(data)
 synthetic_data = model.sample(n_samples=100)
 ```
 
-<!---
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kathrinse/be_great/blob/main/examples/GReaT_colab_example.ipynb)--->
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kathrinse/be_great/blob/main/examples/GReaT_colab_example.ipynb)
+
+### Imputing a sample
+GReaT also features an interface to impute, i.e., fill in, missing values in arbitrary combinations. This requires a trained ``model``, for instance one obtained using the code snippet above, and a ```pd.DataFrame``` where missing values are set to NaN.
+A minimal example is provided below:
+```python
+# test_data: pd.DataFrame with samples from the distribution
+# model: GReaT trained on the data distribution that should be imputed
+
+# Drop values randomly from test_data
+import numpy as np
+for clm in test_data.columns:
+    test_data[clm]=test_data[clm].apply(lambda x: (x if np.random.rand() > 0.5 else np.nan))
+
+imputed_data = model.impute(test_data, max_length=200)
+```
+
+
 
 ## GReaT Citation 
 

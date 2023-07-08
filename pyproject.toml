@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "be_great"
-version = "0.0.4"
+version = "0.0.5"
 authors = [
   { name="Kathrin Sessler", email="kathrin.sessler@tum.de" },
 ]
@@ -20,12 +20,13 @@ classifiers = [
 keywords = ["great", "pytorch", "tabular data", "data generation", "transformer", "language models", "deep learning"]
 dependencies = [
     "datasets >= 2.5.2",
-    "numpy >= 1.24.1",
+    "numpy >= 1.24.2",
     "pandas >= 1.4.4",
     "scikit_learn >= 1.1.1",
     "torch >= 1.10.2",
     "tqdm >= 4.64.1",
-    "transformers >= 4.22.1"
+    "transformers >= 4.22.1",
+    "accelerate >= 0.20.1",
 ]
 
 [project.urls]
