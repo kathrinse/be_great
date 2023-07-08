@@ -92,7 +92,7 @@ class GReaT:
                 )
             except ImportError:
                 raise ImportError(
-                    "This function requires the 'perf' package. Please install it with - pip install pert."
+                    "This function requires the 'perf' package. Please install it with - pip install peft"
                 )
 
             # Define LoRA Config
