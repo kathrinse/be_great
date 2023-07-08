@@ -19,17 +19,20 @@ def _seed_worker(_):
 
 
 class GReaTTrainer(Trainer):
-    """ GReaT Trainer
+    """GReaT Trainer
 
     Overwrites the get_train_dataloader methode of the HuggingFace Trainer to not remove the "unused" columns -
     they are needed later!
     """
+
     def get_train_dataloader(self) -> DataLoader:
         if self.train_dataset is None:
             raise ValueError("Trainer: training requires a train_dataset.")
 
         data_collator = self.data_collator
-        train_dataset = self.train_dataset  # self._remove_unused_columns(self.train_dataset, description="training")
+        train_dataset = (
+            self.train_dataset
+        )  # self._remove_unused_columns(self.train_dataset, description="training")
         train_sampler = self._get_train_sampler()
 
         return DataLoader(

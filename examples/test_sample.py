@@ -17,7 +17,9 @@ great = GReaT.load_from_dir("iris")
 # samples = great.sample(12, device="cpu", k=6)
 
 # Categorical column as start
-samples = great.sample(20, k=5, start_col="target", start_col_dist={"0.0": 0.33, "1.0": 0.33, "2.0": 0.33})
+samples = great.sample(
+    20, k=5, start_col="target", start_col_dist={"0.0": 0.33, "1.0": 0.33, "2.0": 0.33}
+)
 
 print(samples)
 samples.to_csv("iris_samples.csv")

@@ -10,19 +10,29 @@ import pandas as pd
 from tqdm import tqdm
 
 import torch
-from transformers import (AutoTokenizer,
-                          AutoModelForCausalLM,
-                          TrainingArguments)
+from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
 
 from be_great.great_dataset import GReaTDataset, GReaTDataCollator
-from be_great.great_start import GReaTStart, CategoricalStart, ContinuousStart, RandomStart, _pad_tokens
+from be_great.great_start import (
+    GReaTStart,
+    CategoricalStart,
+    ContinuousStart,
+    RandomStart,
+    _pad_tokens,
+)
 from be_great.great_trainer import GReaTTrainer
-from be_great.great_utils import _array_to_dataframe, _get_column_distribution, _convert_tokens_to_text, \
-    _convert_text_to_tabular_data, _partial_df_to_promts, bcolors
-from peft import LoraConfig, get_peft_model, prepare_model_for_int8_training, TaskType
+from be_great.great_utils import (
+    _array_to_dataframe,
+    _get_column_distribution,
+    _convert_tokens_to_text,
+    _convert_text_to_tabular_data,
+    _partial_df_to_promts,
+    bcolors,
+)
+
 
 class GReaT:
-    """ GReaT Class
+    """GReaT Class
 
     The GReaT class handles the whole generation flow. It is used to fine-tune a large language model for tabular data,
     and to sample synthetic tabular data.
@@ -43,9 +53,16 @@ class GReaT:
         conditional_col_dist (dict | list): Distribution of the feature/column specified by condtional_col
     """
 
-    def __init__(self, llm: str, experiment_dir: str = "trainer_great", epochs: int = 100,
-                 batch_size: int = 8, efficient_finetuning: str = "", **train_kwargs):
-        """ Initializes GReaT.
+    def __init__(
+        self,
+        llm: str,
+        experiment_dir: str = "trainer_great",
+        epochs: int = 100,
+        batch_size: int = 8,
+        efficient_finetuning: str = "",
+        **train_kwargs,
+    ):
+        """Initializes GReaT.
 
         Args:
             llm: HuggingFace checkpoint of a pretrained large language model, used a basis of our model
@@ -65,21 +82,35 @@ class GReaT:
         self.model = AutoModelForCausalLM.from_pretrained(self.llm)
 
         if self.efficient_finetuning == "lora":
+            # Lazy importing
+            try:
+                from peft import (
+                    LoraConfig,
+                    get_peft_model,
+                    prepare_model_for_int8_training,
+                    TaskType,
+                )
+            except ImportError:
+                raise ImportError(
+                    "This function requires the 'perf' package. Please install it with - pip install pert."
+                )
+
             # Define LoRA Config
             lora_config = LoraConfig(
-                r=16, # only training 0.16% of the parameters of the model
+                r=16,  # only training 0.16% of the parameters of the model
                 lora_alpha=32,
-                target_modules=["c_attn"], # this is specific for gpt2 model, to be adapted
+                target_modules=[
+                    "c_attn"
+                ],  # this is specific for gpt2 model, to be adapted
                 lora_dropout=0.05,
                 bias="none",
-                task_type=TaskType.CAUSAL_LM # this is specific for gpt2 model, to be adapted
+                task_type=TaskType.CAUSAL_LM,  # this is specific for gpt2 model, to be adapted
             )
             # prepare int-8 model for training
             self.model = prepare_model_for_int8_training(self.model)
             # add LoRA adaptor
             self.model = get_peft_model(self.model, lora_config)
             self.model.print_trainable_parameters()
-
 
         # Set the training hyperparameters
         self.experiment_dir = experiment_dir
@@ -93,10 +124,14 @@ class GReaT:
         self.conditional_col = None
         self.conditional_col_dist = None
 
-    def fit(self, data: tp.Union[pd.DataFrame, np.ndarray], column_names: tp.Optional[tp.List[str]] = None,
-            conditional_col: tp.Optional[str] = None, resume_from_checkpoint: tp.Union[bool, str] = False) \
-            -> GReaTTrainer:
-        """ Fine-tune GReaT using tabular data.
+    def fit(
+        self,
+        data: tp.Union[pd.DataFrame, np.ndarray],
+        column_names: tp.Optional[tp.List[str]] = None,
+        conditional_col: tp.Optional[str] = None,
+        resume_from_checkpoint: tp.Union[bool, str] = False,
+    ) -> GReaTTrainer:
+        """Fine-tune GReaT using tabular data.
 
         Args:
             data: Pandas DataFrame or Numpy Array that contains the tabular data
@@ -121,22 +156,36 @@ class GReaT:
 
         # Set training hyperparameters
         logging.info("Create GReaT Trainer...")
-        training_args = TrainingArguments(self.experiment_dir,
-                                          num_train_epochs=self.epochs,
-                                          per_device_train_batch_size=self.batch_size,
-                                          **self.train_hyperparameters)
-        great_trainer = GReaTTrainer(self.model, training_args, train_dataset=great_ds, tokenizer=self.tokenizer,
-                                     data_collator=GReaTDataCollator(self.tokenizer))
+        training_args = TrainingArguments(
+            self.experiment_dir,
+            num_train_epochs=self.epochs,
+            per_device_train_batch_size=self.batch_size,
+            **self.train_hyperparameters,
+        )
+        great_trainer = GReaTTrainer(
+            self.model,
+            training_args,
+            train_dataset=great_ds,
+            tokenizer=self.tokenizer,
+            data_collator=GReaTDataCollator(self.tokenizer),
+        )
 
         # Start training
         logging.info("Start training...")
         great_trainer.train(resume_from_checkpoint=resume_from_checkpoint)
         return great_trainer
 
-    def sample(self, n_samples: int,
-               start_col: tp.Optional[str] = "", start_col_dist: tp.Optional[tp.Union[dict, list]] = None,
-               temperature: float = 0.7, k: int = 100, max_length: int = 100, device: str = "cuda") -> pd.DataFrame:
-        """ Generate synthetic tabular data samples
+    def sample(
+        self,
+        n_samples: int,
+        start_col: tp.Optional[str] = "",
+        start_col_dist: tp.Optional[tp.Union[dict, list]] = None,
+        temperature: float = 0.7,
+        k: int = 100,
+        max_length: int = 100,
+        device: str = "cuda",
+    ) -> pd.DataFrame:
+        """Generate synthetic tabular data samples
 
         Args:
             n_samples: Number of synthetic samples to generate
@@ -175,8 +224,13 @@ class GReaT:
                     start_tokens = torch.tensor(start_tokens).to(device)
 
                     # Generate tokens
-                    tokens = self.model.generate(input_ids=start_tokens, max_length=max_length,
-                                                 do_sample=True, temperature=temperature, pad_token_id=50256)
+                    tokens = self.model.generate(
+                        input_ids=start_tokens,
+                        max_length=max_length,
+                        do_sample=True,
+                        temperature=temperature,
+                        pad_token_id=50256,
+                    )
 
                     # Convert tokens back to tabular data
                     text_data = _convert_tokens_to_text(tokens, self.tokenizer)
@@ -184,36 +238,47 @@ class GReaT:
 
                     # Remove rows with flawed numerical values
                     for i_num_cols in self.num_cols:
-                        df_gen = df_gen[pd.to_numeric(
-                            df_gen[i_num_cols], errors='coerce').notnull()]
+                        df_gen = df_gen[
+                            pd.to_numeric(df_gen[i_num_cols], errors="coerce").notnull()
+                        ]
 
                     df_gen[self.num_cols] = df_gen[self.num_cols].astype(float)
 
                     # Remove rows with missing values
-                    df_gen = df_gen.drop(
-                        df_gen[df_gen.isna().any(axis=1)].index)
+                    df_gen = df_gen.drop(df_gen[df_gen.isna().any(axis=1)].index)
 
                     # Update process bar
                     pbar.update(df_gen.shape[0] - already_generated)
                     already_generated = df_gen.shape[0]
-                    
-                    # Check if we actually generating synth samples and if not break everything 
+
+                    # Check if we actually generating synth samples and if not break everything
                     _cnt += 1
                     if _cnt > 13 and already_generated == 0:  # (:
-                        raise Exception('Breaking the generation loop!')
-                        
+                        raise Exception("Breaking the generation loop!")
+
             except Exception as e:
                 print(f"{bcolors.FAIL}An error has occurred: {str(e)}{bcolors.ENDC}")
-                print(f"{bcolors.WARNING}To address this issue, consider fine-tuning the GReaT model for an extended period. This can be achieved by increasing the number of epochs.{bcolors.ENDC}")
-                print(f"{bcolors.WARNING}Alternatively, you might increase the max_length parameter within the sample function. For example: model.sample(n_samples=10, max_length=2000){bcolors.ENDC}")
-                print(f"{bcolors.OKBLUE}If the problem persists despite these adjustments, feel free to raise an issue on our GitHub page at: https://github.com/kathrinse/be_great/issues{bcolors.ENDC}")
-            
+                print(
+                    f"{bcolors.WARNING}To address this issue, consider fine-tuning the GReaT model for an extended period. This can be achieved by increasing the number of epochs.{bcolors.ENDC}"
+                )
+                print(
+                    f"{bcolors.WARNING}Alternatively, you might increase the max_length parameter within the sample function. For example: model.sample(n_samples=10, max_length=2000){bcolors.ENDC}"
+                )
+                print(
+                    f"{bcolors.OKBLUE}If the problem persists despite these adjustments, feel free to raise an issue on our GitHub page at: https://github.com/kathrinse/be_great/issues{bcolors.ENDC}"
+                )
+
         df_gen = df_gen.reset_index(drop=True)
         return df_gen.head(n_samples)
 
-    def great_sample(self, starting_prompts: tp.Union[str, list[str]], temperature: float = 0.7, max_length: int = 100,
-                     device: str = "cuda") -> pd.DataFrame:
-        """ Generate synthetic tabular data samples conditioned on a given input.
+    def great_sample(
+        self,
+        starting_prompts: tp.Union[str, list[str]],
+        temperature: float = 0.7,
+        max_length: int = 100,
+        device: str = "cuda",
+    ) -> pd.DataFrame:
+        """Generate synthetic tabular data samples conditioned on a given input.
 
         Args:
             starting_prompts: String or List of Strings on which the output is conditioned.
@@ -232,8 +297,11 @@ class GReaT:
         # ToDo: Add n_samples argument to generate more samples for one conditional input.
 
         self.model.to(device)
-        starting_prompts = [starting_prompts] if isinstance(
-            starting_prompts, str) else starting_prompts
+        starting_prompts = (
+            [starting_prompts]
+            if isinstance(starting_prompts, str)
+            else starting_prompts
+        )
         generated_data = []
 
         # Generate a sample for each starting point
@@ -245,20 +313,33 @@ class GReaT:
             start_token = torch.tensor(self.tokenizer(prompt)["input_ids"]).to(device)
 
             # Generate tokens
-            gen = self.model.generate(input_ids=torch.unsqueeze(start_token, 0), max_length=max_length,
-                                      do_sample=True, temperature=temperature, pad_token_id=50256)
+            gen = self.model.generate(
+                input_ids=torch.unsqueeze(start_token, 0),
+                max_length=max_length,
+                do_sample=True,
+                temperature=temperature,
+                pad_token_id=50256,
+            )
             generated_data.append(torch.squeeze(gen))
 
         # Convert Text back to Tabular Data
         decoded_data = _convert_tokens_to_text(generated_data, self.tokenizer)
         df_gen = _convert_text_to_tabular_data(
-            decoded_data, pd.DataFrame(columns=self.columns))
+            decoded_data, pd.DataFrame(columns=self.columns)
+        )
 
         return df_gen
 
-    def impute(self, df_miss: pd.DataFrame, temperature: float = 0.7, k: int = 100, 
-        max_length: int = 100, max_retries=15,  device: str = "cuda") -> pd.DataFrame:
-        """ Impute a DataFrame with missing values using a trained GReaT model.
+    def impute(
+        self,
+        df_miss: pd.DataFrame,
+        temperature: float = 0.7,
+        k: int = 100,
+        max_length: int = 100,
+        max_retries=15,
+        device: str = "cuda",
+    ) -> pd.DataFrame:
+        """Impute a DataFrame with missing values using a trained GReaT model.
         Args:
             df_miss: pandas data frame of the exact same format (column names, value ranges/types) as the data that
              was used to train the GReaT model, however some values might be missing, which is indicated by the value of NaN.
@@ -278,29 +359,35 @@ class GReaT:
 
         # Check DataFrame passed.
         if set(df_miss.columns) != set(self.columns):
-            raise ValueError("The column names in the DataFrame passed to impute do not match the columns of the GReaT model.")
+            raise ValueError(
+                "The column names in the DataFrame passed to impute do not match the columns of the GReaT model."
+            )
 
         self.model.to(device)
 
-        #start_token = torch.tensor(_pad_tokens(self.tokenizer(starting_prompts)["input_ids"])).to(device)
+        # start_token = torch.tensor(_pad_tokens(self.tokenizer(starting_prompts)["input_ids"])).to(device)
         index = 0
-        df_list=[]
+        df_list = []
         with tqdm(total=len(df_miss)) as pbar:
             while index < len(df_miss):
                 is_complete = False
                 retries = 0
                 df_curr = df_miss.iloc[[index]]
-                org_index = df_curr.index # Keep index in new DataFrame
+                org_index = df_curr.index  # Keep index in new DataFrame
                 while not is_complete:
                     num_attrs_missing = pd.isna(df_curr).sum().sum()
-                    #print("Number of missing values: ",  num_attrs_missing)
+                    # print("Number of missing values: ",  num_attrs_missing)
                     # Generate text promt from current features.
                     starting_prompts = _partial_df_to_promts(df_curr)
-                    df_curr = self.great_sample(starting_prompts, temperature, max_length, device=device)
+                    df_curr = self.great_sample(
+                        starting_prompts, temperature, max_length, device=device
+                    )
 
                     # Convert numerical values to float, flawed numerical values to NaN
                     for i_num_cols in self.num_cols:
-                        df_curr[i_num_cols] = pd.to_numeric(df_curr[i_num_cols], errors='coerce')
+                        df_curr[i_num_cols] = pd.to_numeric(
+                            df_curr[i_num_cols], errors="coerce"
+                        )
                     df_curr[self.num_cols] = df_curr[self.num_cols].astype(np.float)
 
                     # Check for missing values
@@ -313,12 +400,12 @@ class GReaT:
                     if retries == max_retries:
                         warnings.warn("Max retries reached.")
                         break
-                index +=1
+                index += 1
                 pbar.update(1)
         return pd.concat(df_list, axis=0)
 
     def save(self, path: str):
-        """ Save GReaT Model
+        """Save GReaT Model
 
         Saves the model weights and a configuration file in the given directory.
 
@@ -327,8 +414,7 @@ class GReaT:
         """
         # Make directory
         if os.path.isdir(path):
-            warnings.warn(
-                f"Directory {path} already exists and is overwritten now.")
+            warnings.warn(f"Directory {path} already exists and is overwritten now.")
         else:
             os.mkdir(path)
 
@@ -341,7 +427,8 @@ class GReaT:
             # NDArray is not JSON serializable and therefore has to be converted into a list.
             if isinstance(attributes["conditional_col_dist"], np.ndarray):
                 attributes["conditional_col_dist"] = list(
-                    attributes["conditional_col_dist"])
+                    attributes["conditional_col_dist"]
+                )
 
             json.dump(attributes, f)
 
@@ -349,7 +436,7 @@ class GReaT:
         torch.save(self.model.state_dict(), path + "/model.pt")
 
     def load_finetuned_model(self, path: str):
-        """ Load fine-tuned model
+        """Load fine-tuned model
 
         Load the weights of a fine-tuned large language model into the GReaT pipeline
 
@@ -360,7 +447,7 @@ class GReaT:
 
     @classmethod
     def load_from_dir(cls, path: str):
-        """ Load GReaT class
+        """Load GReaT class
 
         Load trained GReaT model from directory.
 
@@ -384,8 +471,7 @@ class GReaT:
             setattr(great, k, v)
 
         # Load model weights
-        great.model.load_state_dict(torch.load(
-            path + "/model.pt", map_location="cpu"))
+        great.model.load_state_dict(torch.load(path + "/model.pt", map_location="cpu"))
 
         return great
 
@@ -394,30 +480,42 @@ class GReaT:
         self.columns = df.columns.to_list()
         self.num_cols = df.select_dtypes(include=np.number).columns.to_list()
 
-    def _update_conditional_information(self, df: pd.DataFrame, conditional_col: tp.Optional[str] = None):
-        assert conditional_col is None or isinstance(conditional_col, str), \
-            f"The column name has to be a string and not {type(conditional_col)}"
-        assert conditional_col is None or conditional_col in df.columns, \
-            f"The column name {conditional_col} is not in the feature names of the given dataset"
+    def _update_conditional_information(
+        self, df: pd.DataFrame, conditional_col: tp.Optional[str] = None
+    ):
+        assert conditional_col is None or isinstance(
+            conditional_col, str
+        ), f"The column name has to be a string and not {type(conditional_col)}"
+        assert (
+            conditional_col is None or conditional_col in df.columns
+        ), f"The column name {conditional_col} is not in the feature names of the given dataset"
 
         # Take the distribution of the conditional column for a starting point in the generation process
         self.conditional_col = conditional_col if conditional_col else df.columns[-1]
-        self.conditional_col_dist = _get_column_distribution(
-            df, self.conditional_col)
+        self.conditional_col_dist = _get_column_distribution(df, self.conditional_col)
 
-    def _get_start_sampler(self, start_col: tp.Optional[str],
-                           start_col_dist: tp.Optional[tp.Union[tp.Dict, tp.List]]) -> GReaTStart:
+    def _get_start_sampler(
+        self,
+        start_col: tp.Optional[str],
+        start_col_dist: tp.Optional[tp.Union[tp.Dict, tp.List]],
+    ) -> GReaTStart:
         if start_col and start_col_dist is None:
             raise ValueError(
-                f"Start column {start_col} was given, but no corresponding distribution.")
+                f"Start column {start_col} was given, but no corresponding distribution."
+            )
         if start_col_dist is not None and not start_col:
             raise ValueError(
-                f"Start column distribution {start_col} was given, the column name is missing.")
+                f"Start column distribution {start_col} was given, the column name is missing."
+            )
 
-        assert start_col is None or isinstance(start_col, str), \
-            f"The column name has to be a string and not {type(start_col)}"
-        assert start_col_dist is None or isinstance(start_col_dist, dict) or isinstance(start_col_dist, list), \
-            f"The distribution of the start column on has to be a list or a dict and not {type(start_col_dist)}"
+        assert start_col is None or isinstance(
+            start_col, str
+        ), f"The column name has to be a string and not {type(start_col)}"
+        assert (
+            start_col_dist is None
+            or isinstance(start_col_dist, dict)
+            or isinstance(start_col_dist, list)
+        ), f"The distribution of the start column on has to be a list or a dict and not {type(start_col_dist)}"
 
         start_col = start_col if start_col else self.conditional_col
         start_col_dist = start_col_dist if start_col_dist else self.conditional_col_dist
