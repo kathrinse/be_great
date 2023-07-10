@@ -1,0 +1,1 @@
+{"cat_cols": [], "num_cols": ["MedInc", "HouseAge", "AveRooms", "AveBedrms", "Population", "AveOccup", "Latitude", "Longitude", "MedHouseVal"], "label_col": "MedHouseVal", "task": "regression", "discrete_columns": [], "train_size": 16512, "test_size": 4128, "n_features": 9}
