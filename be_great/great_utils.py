@@ -92,6 +92,8 @@ def _convert_text_to_tabular_data(
         Pandas DataFrame with the tabular data from the text appended
     """
     columns = df_gen.columns.to_list()
+    generated = []
+
     # Convert text to tabular data
     for t in text:
         features = t.split(",")
@@ -106,7 +108,9 @@ def _convert_text_to_tabular_data(
                 except IndexError:
                     # print("An Index Error occurred - if this happends a lot, consider fine-tuning your model further.")
                     pass
-        df_gen = pd.concat([df_gen, pd.DataFrame(td)], ignore_index=True, axis=0)
+        generated.append(td)
+    df_gen = pd.DataFrame(generated)
+
     return df_gen
 
 
