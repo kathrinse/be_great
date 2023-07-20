@@ -211,15 +211,15 @@ class GReaT:
         # Move model to device
         self.model.to(device)
 
-        # Init empty DataFrame for the generated samples
-        df_gen = pd.DataFrame(columns=self.columns)
+        # Init list for generated DataFrames
+        dfs = []
 
         # Start generation process
         with tqdm(total=n_samples) as pbar:
             already_generated = 0
             _cnt = 0
             try:
-                while n_samples > df_gen.shape[0]:
+                while n_samples > already_generated:
                     start_tokens = great_start.get_start_tokens(k)
                     start_tokens = torch.tensor(start_tokens).to(device)
 
@@ -234,7 +234,7 @@ class GReaT:
 
                     # Convert tokens back to tabular data
                     text_data = _convert_tokens_to_text(tokens, self.tokenizer)
-                    df_gen = _convert_text_to_tabular_data(text_data, df_gen)
+                    df_gen = _convert_text_to_tabular_data(text_data, self.columns)
 
                     # Remove rows with flawed numerical values
                     for i_num_cols in self.num_cols:
@@ -247,9 +247,11 @@ class GReaT:
                     # Remove rows with missing values
                     df_gen = df_gen.drop(df_gen[df_gen.isna().any(axis=1)].index)
 
+                    dfs.append(df_gen)
+                    already_generated += len(dfs[-1])
+
                     # Update process bar
-                    pbar.update(df_gen.shape[0] - already_generated)
-                    already_generated = df_gen.shape[0]
+                    pbar.update(len(dfs[-1]))
 
                     # Check if we actually generating synth samples and if not break everything
                     _cnt += 1
@@ -268,6 +270,7 @@ class GReaT:
                     f"{bcolors.OKBLUE}If the problem persists despite these adjustments, feel free to raise an issue on our GitHub page at: https://github.com/kathrinse/be_great/issues{bcolors.ENDC}"
                 )
 
+        df_gen = pd.concat(dfs)
         df_gen = df_gen.reset_index(drop=True)
         return df_gen.head(n_samples)
 
@@ -325,7 +328,7 @@ class GReaT:
         # Convert Text back to Tabular Data
         decoded_data = _convert_tokens_to_text(generated_data, self.tokenizer)
         df_gen = _convert_text_to_tabular_data(
-            decoded_data, pd.DataFrame(columns=self.columns)
+            decoded_data, self.columns
         )
 
         return df_gen
