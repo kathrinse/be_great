@@ -80,18 +80,19 @@ def _convert_tokens_to_text(
 
 
 def _convert_text_to_tabular_data(
-    text: tp.List[str], df_gen: pd.DataFrame
+    text: tp.List[str], columns: tp.List[str]
 ) -> pd.DataFrame:
     """Converts the sentences back to tabular data
 
     Args:
         text: List of the tabular data in text form
-        df_gen: Pandas DataFrame where the tabular data is appended
+        columns: Column names of the data
 
     Returns:
         Pandas DataFrame with the tabular data from the text appended
     """
-    columns = df_gen.columns.to_list()
+    generated = []
+
     # Convert text to tabular data
     for t in text:
         features = t.split(",")
@@ -102,11 +103,13 @@ def _convert_text_to_tabular_data(
             values = f.strip().split(" is ")
             if values[0] in columns and not td[values[0]]:
                 try:
-                    td[values[0]] = [values[1]]
+                    td[values[0]] = values[1]
                 except IndexError:
                     # print("An Index Error occurred - if this happends a lot, consider fine-tuning your model further.")
                     pass
-        df_gen = pd.concat([df_gen, pd.DataFrame(td)], ignore_index=True, axis=0)
+        generated.append(td)
+    df_gen = pd.DataFrame(generated)
+
     return df_gen
 
 
