@@ -4,9 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "be_great"
-version = "0.0.5"
+version = "0.0.6"
 authors = [
   { name="Kathrin Sessler", email="kathrin.sessler@tum.de" },
+  { name="Vadim Borisov", email="vadim.borisov@uni-tuebingen.de"},
 ]
 description = "Generating Realistic Tabular Data using Large Language Models"
 readme = "README.md"
@@ -20,7 +21,7 @@ classifiers = [
 keywords = ["great", "pytorch", "tabular data", "data generation", "transformer", "language models", "deep learning"]
 dependencies = [
     "datasets >= 2.5.2",
-    "numpy >= 1.24.2",
+    "numpy >= 1.23.1",
     "pandas >= 1.4.4",
     "scikit_learn >= 1.1.1",
     "torch >= 1.10.2",

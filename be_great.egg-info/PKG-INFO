@@ -1,8 +1,8 @@
 Metadata-Version: 2.1
 Name: be-great
-Version: 0.0.5
+Version: 0.0.6
 Summary: Generating Realistic Tabular Data using Large Language Models
-Author-email: Kathrin Sessler <kathrin.sessler@tum.de>
+Author-email: Kathrin Sessler <kathrin.sessler@tum.de>, Vadim Borisov <vadim.borisov@uni-tuebingen.de>
 License: MIT License
         
         Copyright (c) 2022 Kathrin Seßler and Vadim Borisov
