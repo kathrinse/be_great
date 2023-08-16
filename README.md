@@ -14,8 +14,7 @@
 &nbsp;
 &nbsp;
 
-Our GReaT framework utilizes the capabilities of pretrained large language Transformer models to synthesize realistic tabular data. 
-New samples are generated with just a few lines of code, following an easy-to-use API. Please see our [publication](https://openreview.net/forum?id=cEygmQNOeI) for more details. 
+Our GReaT framework leverages the power of advanced pretrained Transformer language models to produce high-quality synthetic tabular data. Generate new data samples effortlessly with our user-friendly API in just a few lines of code. Please see our [publication](https://openreview.net/forum?id=cEygmQNOeI) for more details. 
 
 ## GReaT Installation
 
