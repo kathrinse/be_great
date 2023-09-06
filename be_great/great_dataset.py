@@ -43,8 +43,7 @@ class GReaTDataset(Dataset):
                 for i in shuffle_idx
             ]
         )
-
-        tokenized_text = self.tokenizer(shuffled_text)
+        tokenized_text = self.tokenizer(shuffled_text, padding=True)
         return tokenized_text
 
     def __getitems__(self, keys: tp.Union[int, slice, str, list]):

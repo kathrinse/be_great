@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: be-great
-Version: 0.0.6
+Version: 0.0.7
 Summary: Generating Realistic Tabular Data using Large Language Models
 Author-email: Kathrin Sessler <kathrin.sessler@tum.de>, Vadim Borisov <vadim.borisov@uni-tuebingen.de>
 License: MIT License
@@ -51,8 +51,7 @@ License-File: LICENSE
 &nbsp;
 &nbsp;
 
-Our GReaT framework utilizes the capabilities of pretrained large language Transformer models to synthesize realistic tabular data. 
-New samples are generated with just a few lines of code, following an easy-to-use API. Please see our [publication](https://openreview.net/forum?id=cEygmQNOeI) for more details. 
+Our GReaT framework leverages the power of advanced pretrained Transformer language models to produce high-quality synthetic tabular data. Generate new data samples effortlessly with our user-friendly API in just a few lines of code. Please see our [publication](https://openreview.net/forum?id=cEygmQNOeI) for more details. 
 
 ## GReaT Installation
 

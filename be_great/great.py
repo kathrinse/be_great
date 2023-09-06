@@ -183,28 +183,29 @@ class GReaT:
         temperature: float = 0.7,
         k: int = 100,
         max_length: int = 100,
+        drop_nan: bool = False,
         device: str = "cuda",
     ) -> pd.DataFrame:
-        """Generate synthetic tabular data samples
+        """
+        Generate synthetic tabular data samples.
 
         Args:
-            n_samples: Number of synthetic samples to generate
-            start_col: Feature to use as starting point for the generation process. If not given, the target
-             learned during the fitting is used as starting point
-            start_col_dist: Feature distribution of the starting feature. Should have the format
-             "{F1: p1, F2: p2, ...}" for discrete columns or be a list of possible values for continuous columns.
-             If not given, the target distribution learned during the fitting is used as starting point
-            temperature: The generation samples each token from the probability distribution given by a softmax
-             function. The temperature parameter controls the softmax function. A low temperature makes it sharper
-             (0 equals greedy search), a high temperature brings more diversity but also uncertainty into the output.
-             See this blog article (https://huggingface.co/blog/how-to-generate) to read more about the generation
-             process
-            k: Sampling Batch Size. Set as high as possible. Speeds up the generation process significantly
-            max_length: Maximal number of tokens to generate - has to be long enough to not cut any information!
-            device: Set to "cpu" if the GPU should not be used. You can also specify the concrete GPU
+            n_samples (int): Number of synthetic samples to generate.
+            start_col (str, optional): Feature to use as the starting point for the generation process.
+                Defaults to the target learned during fitting if not provided.
+            start_col_dist (dict or list, optional): Feature distribution of the starting feature.
+                For discrete columns, should be in the format "{F1: p1, F2: p2, ...}".
+                For continuous columns, should be a list of possible values.
+                Defaults to the target distribution learned during fitting if not provided.
+            temperature (float): Controls the softmax function for token sampling.
+                Lower values make it sharper (0 equals greedy search), higher values introduce more diversity but also uncertainty.
+            k (int): Sampling batch size. Higher values speed up the generation process.
+            max_length (int): Maximum number of tokens to generate. Ensure it's long enough to not cut off any information.
+            drop_nan (bool): Whether to drop rows with NaN values. Defaults to False.
+            device (str): Device to use for generation. Set to "cpu" to avoid using GPU. Specific GPU can also be named.
 
         Returns:
-            Pandas DataFrame with n_samples rows of generated data
+            pd.DataFrame: DataFrame containing n_samples rows of generated data.
         """
         great_start = self._get_start_sampler(start_col, start_col_dist)
 
@@ -236,26 +237,37 @@ class GReaT:
                     text_data = _convert_tokens_to_text(tokens, self.tokenizer)
                     df_gen = _convert_text_to_tabular_data(text_data, self.columns)
 
-                    # Remove rows with flawed numerical values
+                    # Remove rows where we have not generated anything
+                    df_gen = df_gen[~(df_gen == "placeholder").any(axis=1)]
+
+                    # Remove rows where all values are NaN
+                    df_gen = df_gen.dropna(how="all")
+
+                    # Optional: Remove rows with any NaN values
+                    if drop_nan:
+                        df_gen = df_gen.dropna()
+
+                    # Remove rows with flawed numerical values but keep NaNs
                     for i_num_cols in self.num_cols:
+                        coerced_series = pd.to_numeric(
+                            df_gen[i_num_cols], errors="coerce"
+                        )
                         df_gen = df_gen[
-                            pd.to_numeric(df_gen[i_num_cols], errors="coerce").notnull()
+                            coerced_series.notnull() | df_gen[i_num_cols].isna()
                         ]
 
+                    # Convert numerical columns to float
                     df_gen[self.num_cols] = df_gen[self.num_cols].astype(float)
-
-                    # Remove rows with missing values
-                    df_gen = df_gen.drop(df_gen[df_gen.isna().any(axis=1)].index)
 
                     dfs.append(df_gen)
                     already_generated += len(dfs[-1])
 
-                    # Update process bar
+                    # Update progress bar
                     pbar.update(len(dfs[-1]))
 
-                    # Check if we actually generating synth samples and if not break everything
+                    # Check if we are actually generating synthetic samples and if not, break everything
                     _cnt += 1
-                    if _cnt > 13 and already_generated == 0:  # (:
+                    if _cnt > 13 and already_generated == 0:
                         raise Exception("Breaking the generation loop!")
 
             except Exception as e:
@@ -327,9 +339,7 @@ class GReaT:
 
         # Convert Text back to Tabular Data
         decoded_data = _convert_tokens_to_text(generated_data, self.tokenizer)
-        df_gen = _convert_text_to_tabular_data(
-            decoded_data, self.columns
-        )
+        df_gen = _convert_text_to_tabular_data(decoded_data, self.columns)
 
         return df_gen
 

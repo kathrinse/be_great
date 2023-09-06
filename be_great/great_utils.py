@@ -96,12 +96,12 @@ def _convert_text_to_tabular_data(
     # Convert text to tabular data
     for t in text:
         features = t.split(",")
-        td = dict.fromkeys(columns)
+        td = dict.fromkeys(columns, "placeholder")
 
         # Transform all features back to tabular data
         for f in features:
             values = f.strip().split(" is ")
-            if values[0] in columns and not td[values[0]]:
+            if values[0] in columns and td[values[0]] == "placeholder":
                 try:
                     td[values[0]] = values[1]
                 except IndexError:
@@ -109,6 +109,7 @@ def _convert_text_to_tabular_data(
                     pass
         generated.append(td)
     df_gen = pd.DataFrame(generated)
+    df_gen.replace("None", None, inplace=True)
 
     return df_gen
 
