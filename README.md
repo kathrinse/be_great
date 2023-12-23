@@ -16,6 +16,8 @@
 
 Our GReaT framework leverages the power of advanced pretrained Transformer language models to produce high-quality synthetic tabular data. Generate new data samples effortlessly with our user-friendly API in just a few lines of code. Please see our [publication](https://openreview.net/forum?id=cEygmQNOeI) for more details. 
 
+我们的GReaT框架利用先进的预训练Transformer语言模型的力量，生成高质量的合成表格数据。只需几行代码，就可以使用我们的用户友好的API轻松生成新的数据样本。更多详情请参阅我们的[出版物](https://openreview.net/forum?d=cEygmQNOeI)
+
 ## GReaT Installation
 
 The GReaT framework can be easily installed using with [pip](https://pypi.org/project/pip/) - requires a Python version >= 3.9: 
