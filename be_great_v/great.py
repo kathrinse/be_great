@@ -12,16 +12,16 @@ from tqdm import tqdm
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
 
-from be_great.great_dataset import GReaTDataset, GReaTDataCollator
-from be_great.great_start import (
+from be_great_v.great_dataset import GReaTDataset, GReaTDataCollator
+from be_great_v.great_start import (
     GReaTStart,
     CategoricalStart,
     ContinuousStart,
     RandomStart,
     _pad_tokens,
 )
-from be_great.great_trainer import GReaTTrainer
-from be_great.great_utils import (
+from be_great_v.great_trainer import GReaTTrainer
+from be_great_v.great_utils import (
     _array_to_dataframe,
     _get_column_distribution,
     _convert_tokens_to_text,
