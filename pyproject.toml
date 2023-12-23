@@ -36,4 +36,4 @@ dependencies = [
 "Documentation" = "https://kathrinse.github.io/be_great/"
 
 [tool.setuptools]
-packages = ["be-great-v"]
+packages = ["be_great_v"]
