@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "be-great-v"
-version = "0.0.8"
+version = "0.1.1"
 authors = [
   { name= "Tim Saijun", email = "code@zair.top"},
   { name="Kathrin Sessler", email="kathrin.sessler@tum.de" },
   { name="Vadim Borisov", email="vadim.borisov@uni-tuebingen.de"},
 ]
-description = "Generating Realistic Tabular Data using Large Language Models"
+description = "(A Fork)Generating Realistic Tabular Data using Large Language Models"
 readme = "README.md"
 license = { file="LICENSE" }
 requires-python = ">=3.9"
