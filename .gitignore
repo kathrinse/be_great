@@ -3,7 +3,7 @@ __pycache__
 
 .ipynb_checkpoints
 */.ipynb_checkpoints
-
+*.csv
 .idea
 
 examples/iris*
