@@ -56,7 +56,16 @@ for clm in test_data.columns:
 imputed_data = model.impute(test_data, max_length=200)
 ```
 
+### Saving and Loading
+GReaT provides methods for saving a model checkpoint (besides the checkpoints stored by the huggingface transformers Trainer) and loading the checkpoint again.
+```python
+great.save("my_directory")  # saves a "model.pt" and a "config.json" file
+great = GReaT.load_from_dir("my_directory")  # loads the model again
 
+# supports remote file systems via fsspec
+great.save("s3://my_bucket")
+great = GReaT.load_from_dir("my_directory")
+```
 
 ## GReaT Citation 
 
