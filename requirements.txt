@@ -6,3 +6,4 @@ torch >= 1.10.2
 tqdm >= 4.64.1
 transformers >= 4.22.1
 accelerate >= 0.20.1
+fsspec >= 2024.5.0
