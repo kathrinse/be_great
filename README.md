@@ -64,7 +64,7 @@ great = GReaT.load_from_dir("my_directory")  # loads the model again
 
 # supports remote file systems via fsspec
 great.save("s3://my_bucket")
-great = GReaT.load_from_dir("my_directory")
+great = GReaT.load_from_dir("s3://my_bucket")
 ```
 
 ## GReaT Citation 
