@@ -92,7 +92,7 @@ class GReaT:
                 )
             except ImportError:
                 raise ImportError(
-                    "This function requires the 'peft' package. Please install it with - pip install peft"
+                    "This function requires the 'peft' package. Please install it with - pip install peft==0.9.0"
                 )
 
             # Define LoRA Config
