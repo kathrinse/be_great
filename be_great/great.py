@@ -1,9 +1,9 @@
-import os
 import warnings
 import json
 import typing as tp
 import logging
 
+import fsspec
 import numpy as np
 import pandas as pd
 
@@ -426,13 +426,14 @@ class GReaT:
             path: Path where to save the model
         """
         # Make directory
-        if os.path.isdir(path):
+        fs = fsspec.filesystem(fsspec.utils.get_protocol(path))
+        if fs.exists(path):
             warnings.warn(f"Directory {path} already exists and is overwritten now.")
         else:
-            os.mkdir(path)
+            fs.mkdir(path)
 
         # Save attributes
-        with open(path + "/config.json", "w") as f:
+        with fs.open(path + "/config.json", "w") as f:
             attributes = self.__dict__.copy()
             attributes.pop("tokenizer")
             attributes.pop("model")
@@ -446,7 +447,7 @@ class GReaT:
             json.dump(attributes, f)
 
         # Save model weights
-        torch.save(self.model.state_dict(), path + "/model.pt")
+        torch.save(self.model.state_dict(), fs.open(path + "/model.pt", "wb"))
 
     def load_finetuned_model(self, path: str):
         """Load fine-tuned model
@@ -456,7 +457,7 @@ class GReaT:
         Args:
             path: Path to the fine-tuned model
         """
-        self.model.load_state_dict(torch.load(path))
+        self.model.load_state_dict(torch.load(fsspec.open(path, "rb")))
 
     @classmethod
     def load_from_dir(cls, path: str):
@@ -470,10 +471,11 @@ class GReaT:
         Returns:
             New instance of GReaT loaded from directory
         """
-        assert os.path.isdir(path), f"Directory {path} does not exist."
+        fs = fsspec.filesystem(fsspec.utils.get_protocol(path))
+        assert fs.exists(path), f"Directory {path} does not exist."
 
         # Load attributes
-        with open(path + "/config.json", "r") as f:
+        with fs.open(path + "/config.json", "r") as f:
             attributes = json.load(f)
 
         # Create new be_great model instance
@@ -484,7 +486,7 @@ class GReaT:
             setattr(great, k, v)
 
         # Load model weights
-        great.model.load_state_dict(torch.load(path + "/model.pt", map_location="cpu"))
+        great.model.load_state_dict(torch.load(fs.open(path + "/model.pt", "rb"), map_location="cpu"))
 
         return great
 
